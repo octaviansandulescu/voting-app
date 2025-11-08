@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Voting App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Vote for Your Favorite Pet!</h1>
+        <div class="voting-buttons">
+            <button onclick="vote('dog')">🐕 Dog</button>
+            <button onclick="vote('cat')">🐈 Cat</button>
+        </div>
+        <div class="results">
+            <h2>Current Results:</h2>
+            <p>Dogs: <span id="dog-votes">0</span></p>
+            <p>Cats: <span id="cat-votes">0</span></p>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

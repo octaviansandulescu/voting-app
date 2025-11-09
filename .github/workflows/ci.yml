@@ -24,6 +24,8 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run Python tests with coverage
+      env:
+        TESTING: "true"
       run: |
         cd src/backend
         python -m pytest tests/ --cov=. --cov-report=term-missing

@@ -200,33 +200,29 @@ kubectl logs -n voting-app -l app=backend -f
 terraform destroy
 ```
 
-#### **Using Management Scripts (Recommended for Learning)**
+#### **Using Deployment Scripts**
 
-Once Kubernetes cluster is created, use these scripts to manage deployments:
+Once Kubernetes cluster is created, use these 3 essential scripts:
 
 ```bash
-# 🚀 Start deployment
-./scripts/deployment/manage-deployment.sh start
+# 🚀 Deploy application
+./scripts/deployment/start-deployment.sh
 
 # 📊 Check status
-./scripts/deployment/manage-deployment.sh status
+./scripts/deployment/status-deployment.sh
 
-# 🧪 Validate everything works
-./scripts/deployment/manage-deployment.sh validate
-
-# 🛑 Stop deployment (delete all resources)
-./scripts/deployment/manage-deployment.sh stop
-
-# 🔄 Full redeploy (stop + start)
-./scripts/deployment/manage-deployment.sh restart
-
-# 📚 Show help
-./scripts/deployment/manage-deployment.sh help
+# 🛑 Stop & delete everything
+./scripts/deployment/stop-deployment.sh
 ```
 
-**📖 Full Documentation:** [Deployment Scripts Guide](docs/guides/DEPLOYMENT_SCRIPTS.md)
+**Simple workflow:**
+1. Deploy: `./scripts/deployment/start-deployment.sh`
+2. Check: `./scripts/deployment/status-deployment.sh`
+3. Get URL from status output
+4. Test: `curl http://<IP>/api/results`
+5. Vote: `curl -X POST http://<IP>/api/vote -H "Content-Type: application/json" -d '{"vote":"dogs"}'`
 
-⚠️ **Important:** The LoadBalancer IP is dynamically assigned. After each deployment, run `status` command to find the new IP address.
+**📖 Full Documentation:** [Deployment Scripts Guide](docs/guides/DEPLOYMENT_SCRIPTS.md)
 
 ---
 

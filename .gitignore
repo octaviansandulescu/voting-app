@@ -58,3 +58,5 @@ mysql_data/
 .coverage
 htmlcov/
 .pytest_cache/
+.terraform/
+tfplan

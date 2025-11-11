@@ -1,0 +1,231 @@
+###############################################################################
+# TERRAFORM - GKE CLUSTER + CLOUD SQL FOR VOTING APP
+# 
+# This creates:
+# 1. GKE Cluster (Kubernetes) with 3 nodes
+# 2. Cloud SQL MySQL instance
+# 3. VPC and networking
+# 4. Service accounts and IAM
+###############################################################################
+
+terraform {
+  required_version = ">= 1.0"
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "google" {
+  project = var.project_id
+  region  = var.region
+}
+
+# ============================================================================
+# Enable Required APIs
+# ============================================================================
+
+resource "google_project_service" "required_apis" {
+  for_each = toset([
+    "container.googleapis.com",
+    "sqladmin.googleapis.com",
+    "compute.googleapis.com",
+    "servicenetworking.googleapis.com"
+  ])
+
+  service            = each.value
+  disable_on_destroy = false
+}
+
+# ============================================================================
+# VPC Network
+# ============================================================================
+
+resource "google_compute_network" "voting_vpc" {
+  name                    = "${var.cluster_name}-vpc"
+  auto_create_subnetworks = false
+
+  depends_on = [google_project_service.required_apis]
+}
+
+resource "google_compute_subnetwork" "voting_subnet" {
+  name          = "${var.cluster_name}-subnet"
+  ip_cidr_range = "10.0.0.0/16"
+  region        = var.region
+  network       = google_compute_network.voting_vpc.id
+
+  secondary_ip_range {
+    range_name    = "pods"
+    ip_cidr_range = "10.4.0.0/14"
+  }
+
+  secondary_ip_range {
+    range_name    = "services"
+    ip_cidr_range = "10.8.0.0/20"
+  }
+}
+
+# ============================================================================
+# Cloud SQL MySQL Instance
+# ============================================================================
+
+resource "google_sql_database_instance" "voting_db" {
+  name             = "${var.cluster_name}-db"
+  database_version = "MYSQL_8_0"
+  region           = var.region
+  deletion_protection = false
+
+  settings {
+    tier      = "db-f1-micro"
+    disk_size = 20
+
+    backup_configuration {
+      enabled = true
+    }
+
+    ip_configuration {
+      # Allow connections from GKE cluster
+      authorized_networks {
+        name  = "gke-cluster"
+        value = "0.0.0.0/0"  # In production, restrict this!
+      }
+    }
+  }
+
+  depends_on = [google_project_service.required_apis]
+}
+
+resource "google_sql_database" "voting_db" {
+  name     = var.database_name
+  instance = google_sql_database_instance.voting_db.name
+}
+
+resource "google_sql_user" "voting_db_user" {
+  name     = var.database_user
+  instance = google_sql_database_instance.voting_db.name
+  password = random_password.db_password.result
+}
+
+resource "random_password" "db_password" {
+  length  = 32
+  special = true
+}
+
+# ============================================================================
+# GKE Cluster
+# ============================================================================
+
+resource "google_container_cluster" "voting_cluster" {
+  name     = var.cluster_name
+  location = var.region
+
+  # We can't create a cluster with no node pool defined, but we want to only use
+  # separately managed node pools. So we create the smallest possible default
+  # node pool and immediately delete it.
+  remove_default_node_pool = true
+  initial_node_count       = 1
+
+  network    = google_compute_network.voting_vpc.name
+  subnetwork = google_compute_subnetwork.voting_subnet.name
+
+  networking_mode = "VPC_NATIVE"
+
+  ip_allocation_policy {
+    cluster_secondary_range_name  = "pods"
+    services_secondary_range_name = "services"
+  }
+
+  addons_config {
+    http_load_balancing {
+      disabled = false
+    }
+  }
+
+  depends_on = [google_project_service.required_apis]
+}
+
+# ============================================================================
+# GKE Node Pool
+# ============================================================================
+
+resource "google_container_node_pool" "voting_nodes" {
+  name       = "${var.cluster_name}-node-pool"
+  location   = var.region
+  cluster    = google_container_cluster.voting_cluster.name
+  node_count = var.node_count
+
+  autoscaling {
+    min_node_count = 2
+    max_node_count = 5
+  }
+
+  node_config {
+    preemptible  = true
+    machine_type = "e2-medium"
+
+    disk_size_gb = 20
+    disk_type    = "pd-standard"
+
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/compute",
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/logging.write",
+      "https://www.googleapis.com/auth/monitoring",
+      "https://www.googleapis.com/auth/service.management.readonly",
+      "https://www.googleapis.com/auth/servicecontrol"
+    ]
+  }
+
+  management {
+    auto_repair  = true
+    auto_upgrade = true
+  }
+}
+
+# ============================================================================
+# Outputs
+# ============================================================================
+
+output "kubernetes_cluster_name" {
+  value       = google_container_cluster.voting_cluster.name
+  description = "GKE Cluster Name"
+}
+
+output "kubernetes_cluster_host" {
+  value       = google_container_cluster.voting_cluster.endpoint
+  description = "GKE Cluster Host"
+  sensitive   = true
+}
+
+output "region" {
+  value       = var.region
+  description = "GCP region"
+}
+
+output "sql_instance_connection_name" {
+  value       = google_sql_database_instance.voting_db.connection_name
+  description = "Cloud SQL connection name for K8s"
+}
+
+output "sql_database_name" {
+  value       = google_sql_database.voting_db.name
+  description = "Database name"
+}
+
+output "sql_database_user" {
+  value       = google_sql_user.voting_db_user.name
+  description = "Database user"
+}
+
+output "sql_database_password" {
+  value       = random_password.db_password.result
+  description = "Database password"
+  sensitive   = true
+}
+
+output "sql_instance_ip" {
+  value       = google_sql_database_instance.voting_db.private_ip_address != null ? google_sql_database_instance.voting_db.private_ip_address : google_sql_database_instance.voting_db.public_ip_address
+  description = "Database IP address"
+}

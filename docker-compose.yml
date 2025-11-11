@@ -2,7 +2,10 @@ version: '3.8'
 
 services:
   frontend:
-    image: nginx:alpine
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    image: voting-app-frontend:latest
     ports:
       - "80:80"
     volumes:
@@ -11,8 +14,17 @@ services:
   backend:
     build: 
       context: ./src/backend
+      dockerfile: Dockerfile
+    image: voting-app-backend:latest
     ports:
       - "8000:8000"
+    environment:
+      - DEPLOYMENT_MODE=docker
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - DB_NAME=votingapp
     command: uvicorn main:app --host 0.0.0.0 --port 8000
     depends_on:
       db:

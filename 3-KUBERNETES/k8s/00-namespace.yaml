@@ -1,0 +1,11 @@
+###############################################################################
+# KUBERNETES NAMESPACE
+###############################################################################
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: voting-app
+  labels:
+    name: voting-app
+    environment: production

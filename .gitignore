@@ -1,3 +1,22 @@
+# Environment Files - NEVER COMMIT THESE!
+.env
+.env.local
+.env.docker
+.env.*.local
+*.tfvars
+!.env.example
+!.env.local.example
+!.env.docker.example
+!terraform.tfvars.example
+
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate*
+terraform/crash.log
+terraform/.tfvars
+tfplan
+
 # Python-generated files
 __pycache__/
 *.py[oc]
@@ -5,6 +24,37 @@ build/
 dist/
 wheels/
 *.egg-info
+*.so
+.Python
 
 # Virtual environments
 .venv
+venv/
+ENV/
+env/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# MySQL
+mysql_data/
+*.sql
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/

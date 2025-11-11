@@ -3,22 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pet Voting App</title>
+    <title>🗳️ Voting App - Dogs vs Cats</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Vote for Your Favorite Pet!</h1>
-        <div class="voting-buttons">
-            <button onclick="vote('dog')">🐕 Dog</button>
-            <button onclick="vote('cat')">🐈 Cat</button>
+        <header>
+            <h1>🗳️ Vote: Dogs vs Cats</h1>
+            <p class="subtitle">Which one is better? You decide!</p>
+        </header>
+
+        <!-- Voting Buttons -->
+        <div class="voting-section">
+            <button class="vote-btn dogs-btn" onclick="vote('dogs')">
+                <span class="emoji">🐕</span>
+                <span class="label">Vote Dogs</span>
+            </button>
+
+            <button class="vote-btn cats-btn" onclick="vote('cats')">
+                <span class="emoji">🐱</span>
+                <span class="label">Vote Cats</span>
+            </button>
         </div>
-        <div class="results">
-            <h2>Current Results:</h2>
-            <p>Dogs: <span id="dog-votes">0</span></p>
-            <p>Cats: <span id="cat-votes">0</span></p>
+
+        <!-- Results Display -->
+        <div class="results-section">
+            <h2>📊 Live Results</h2>
+            
+            <div class="results-grid">
+                <!-- Dogs Result -->
+                <div class="result-card dogs-card">
+                    <div class="result-emoji">🐕</div>
+                    <div class="result-label">Dogs</div>
+                    <div class="result-count" id="dogs-count">0</div>
+                    <div class="result-bar">
+                        <div class="result-bar-fill dogs-fill" id="dogs-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="result-percent" id="dogs-percent">0%</div>
+                </div>
+
+                <!-- Cats Result -->
+                <div class="result-card cats-card">
+                    <div class="result-emoji">🐱</div>
+                    <div class="result-label">Cats</div>
+                    <div class="result-count" id="cats-count">0</div>
+                    <div class="result-bar">
+                        <div class="result-bar-fill cats-fill" id="cats-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="result-percent" id="cats-percent">0%</div>
+                </div>
+            </div>
+
+            <!-- Total Votes -->
+            <div class="total-votes">
+                <p>Total Votes: <span id="total-votes">0</span></p>
+                <p class="last-updated">Last updated: <span id="last-update">never</span></p>
+            </div>
         </div>
+
+        <!-- Status Messages -->
+        <div class="status-section">
+            <div id="status-message" class="status-message"></div>
+            <div id="error-message" class="error-message"></div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>🚀 Built with FastAPI + MySQL + DevOPS</p>
+            <p>Learn more: Check console for API details</p>
+        </footer>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>

@@ -1,9 +1,17 @@
+# FastAPI & Web Framework
 fastapi==0.104.1
 uvicorn==0.24.0
-sqlalchemy==2.0.23
-pymysql==1.1.0
+pydantic==2.5.0
+
+# Database
+mysql-connector-python==8.2.0
+
+# Environment Management
+python-dotenv==1.0.0
+
+# Utilities
 python-multipart==0.0.6
-cryptography==41.0.5
-httpx==0.25.1
+
+# For testing
 pytest==7.4.3
-pytest-cov==4.1.0
+httpx==0.25.0

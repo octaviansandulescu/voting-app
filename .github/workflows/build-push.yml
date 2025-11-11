@@ -12,6 +12,7 @@ on:
 env:
   REGISTRY: gcr.io
   IMAGE_TAG: ${{ github.sha }}
+  GCP_PROJECT_ID: voting-app-prod
 
 jobs:
   build-push:
@@ -28,11 +29,10 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
       
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
       
       - name: Configure Docker for GCR
         run: |
@@ -41,30 +41,30 @@ jobs:
       - name: Build Backend Image
         run: |
           docker build \
-            -t ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-backend:${{ env.IMAGE_TAG }} \
-            -t ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-backend:latest \
+            -t ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-backend:${{ env.IMAGE_TAG }} \
+            -t ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-backend:latest \
             -f src/backend/Dockerfile \
             src/backend/
       
       - name: Build Frontend Image
         run: |
           docker build \
-            -t ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-frontend:${{ env.IMAGE_TAG }} \
-            -t ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-frontend:latest \
+            -t ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-frontend:${{ env.IMAGE_TAG }} \
+            -t ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-frontend:latest \
             -f src/frontend/Dockerfile \
             src/frontend/
       
       - name: Push Backend Image
         run: |
-          docker push ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-backend:${{ env.IMAGE_TAG }}
-          docker push ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-backend:latest
+          docker push ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-backend:${{ env.IMAGE_TAG }}
+          docker push ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-backend:latest
       
       - name: Push Frontend Image
         run: |
-          docker push ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-frontend:${{ env.IMAGE_TAG }}
-          docker push ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-frontend:latest
+          docker push ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-frontend:${{ env.IMAGE_TAG }}
+          docker push ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-frontend:latest
       
       - name: Output Image Details
         run: |
-          echo "✅ Backend Image: ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-backend:${{ env.IMAGE_TAG }}"
-          echo "✅ Frontend Image: ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-frontend:${{ env.IMAGE_TAG }}"
+          echo "✅ Backend Image: ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-backend:${{ env.IMAGE_TAG }}"
+          echo "✅ Frontend Image: ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-frontend:${{ env.IMAGE_TAG }}"

@@ -87,6 +87,13 @@ Follow this **exact sequence** for optimal learning:
    - Continuous deployment
    - *Automates everything you learned manually*
 
+   **⭐ Setup GitHub Actions:**
+   - **Secure Method (OIDC)**: [docs/guides/GITHUB_OIDC_SETUP.md](docs/guides/GITHUB_OIDC_SETUP.md) ← **RECOMMENDED**
+     - No secrets stored in GitHub
+     - Run: `bash scripts/setup-oidc-github.sh`
+   - **Legacy Method**: [docs/guides/GITHUB_ACTIONS_SETUP.md](docs/guides/GITHUB_ACTIONS_SETUP.md)
+     - Stores service account key in GitHub
+
 8. **[8. Monitoring Setup](docs/guides/MONITORING_SETUP.md)** (15 min)
    - Prometheus metrics collection
    - Grafana dashboards

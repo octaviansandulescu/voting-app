@@ -13,6 +13,17 @@ This is the **most secure** method because:
 
 ---
 
+## ⚠️ Important: OIDC Parameter Names
+
+The GitHub Actions `google-github-actions/auth@v2` uses these exact parameter names:
+- `workload_identity_provider` ← Correct
+- `service_account` ← Correct (NOT `service_account_email`)
+- `audience` ← Optional
+
+These are used in workflows, not the secret names!
+
+---
+
 ## How OIDC Works
 
 ```

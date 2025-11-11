@@ -27,14 +27,17 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
       
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
+        uses: google-github-actions/setup-gcloud@v2
         with:
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          export_default_credentials: true
       
       - name: Configure Docker for GCR
         run: |
@@ -68,5 +71,5 @@ jobs:
       
       - name: Output Image Details
         run: |
-          echo "Backend Image: ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-backend:${{ env.IMAGE_TAG }}"
-          echo "Frontend Image: ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-frontend:${{ env.IMAGE_TAG }}"
+          echo "✅ Backend Image: ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-backend:${{ env.IMAGE_TAG }}"
+          echo "✅ Frontend Image: ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-frontend:${{ env.IMAGE_TAG }}"

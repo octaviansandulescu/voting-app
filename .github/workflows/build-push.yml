@@ -8,10 +8,6 @@ on:
       - 'src/frontend/**'
       - '.github/workflows/build-push.yml'
       - 'docker-compose.yml'
-  workflow_run:
-    workflows: ["CI - Test"]
-    types: [completed]
-    branches: [main]
 
 env:
   REGISTRY: gcr.io
@@ -20,7 +16,6 @@ env:
 jobs:
   build-push:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event.workflow_run.conclusion == 'success'
     
     permissions:
       contents: read

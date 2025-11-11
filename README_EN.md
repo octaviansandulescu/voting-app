@@ -172,31 +172,33 @@ docker-compose down
 
 ```bash
 # 1. Navigate to kubernetes deployment
-cd deployment/kubernetes
+cd 3-KUBERNETES
 
-# 2. Configure GCP project
-cp ../../infrastructure/terraform/terraform.tfvars.example \
-   ../../infrastructure/terraform/terraform.tfvars
-nano ../../infrastructure/terraform/terraform.tfvars
+# 2. Configure GCP project (if deploying to GCP)
+nano terraform/terraform.tfvars
 
 # 3. Deploy infrastructure
-./deploy.sh
+terraform init
+terraform apply
 
-# 4. Wait for deployment
-./verify.sh
+# 4. Wait for deployment to complete (~5-10 minutes)
+kubectl get pods -n voting-app -w
 
-# 5. Get external IP
+# 5. Get the external IP (dynamically assigned)
 kubectl get svc frontend-service -n voting-app
 
-# 6. Open application
+# 6. Open application in browser
+# Copy the EXTERNAL-IP from step 5
 # http://<EXTERNAL-IP>
 
 # 7. View logs
 kubectl logs -n voting-app -l app=backend -f
 
-# 8. Clean up when done
-./cleanup.sh
+# 8. Clean up when done (deletes all GCP resources)
+terraform destroy
 ```
+
+⚠️ **Important:** The LoadBalancer IP is dynamically assigned. After each deployment, run step 5 to find the new IP address.
 
 ---
 
@@ -436,10 +438,33 @@ You will also have:
 | **Testing** | ✅ Ready | Unit, integration, E2E tests |
 | **LOCAL Mode** | ✅ Working | On-premise deployment |
 | **DOCKER Mode** | ✅ Working | Containerized deployment |
-| **KUBERNETES Mode** | ✅ Working | Live on GCP at http://34.42.155.47 |
+| **KUBERNETES Mode** | ✅ Ready | Deployable to GCP (IP assigned after startup) |
 | **CI/CD Pipeline** | ✅ Ready | GitHub Actions workflows |
 | **Monitoring** | ✅ Ready | Prometheus + Grafana |
 | **Documentation** | ✅ Complete | All guides in English |
+
+### 📍 Getting the Kubernetes Service IP
+
+⚠️ **Note:** The Kubernetes LoadBalancer IP is **dynamically assigned** when the cluster starts. It changes each time you start a new cluster.
+
+**To find the current IP after deployment:**
+
+```bash
+# Get the external IP of the frontend service
+kubectl get svc frontend-service -n voting-app
+
+# Output will look like:
+# NAME              TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)
+# frontend-service  LoadBalancer   10.0.0.100      34.42.155.47    80:30123/TCP
+
+# Then access the application at:
+# http://<EXTERNAL-IP>
+```
+
+**For production use:**
+- Store the IP in a DNS record
+- Use a static IP reservation in GCP
+- See [docs/guides/KUBERNETES_SETUP.md](docs/guides/KUBERNETES_SETUP.md) for details
 
 ---
 

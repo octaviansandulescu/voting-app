@@ -28,26 +28,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Authenticate to Google Cloud (OIDC)
+      - name: Check OIDC Secrets Configuration
+        id: check-secrets
+        run: |
+          if [ -z "${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}" ] || [ -z "${{ secrets.SERVICE_ACCOUNT_EMAIL }}" ]; then
+            echo "configured=false" >> $GITHUB_OUTPUT
+          else
+            echo "configured=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Setup OIDC Authentication
+        if: steps.check-secrets.outputs.configured == 'true'
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
       
-      - name: Set up Cloud SDK
+      - name: Setup Cloud SDK
+        if: steps.check-secrets.outputs.configured == 'true'
         uses: google-github-actions/setup-gcloud@v2
       
       - name: Install gke-gcloud-auth-plugin
+        if: steps.check-secrets.outputs.configured == 'true'
         run: |
           gcloud components install gke-gcloud-auth-plugin
       
       - name: Get GKE Credentials
+        if: steps.check-secrets.outputs.configured == 'true'
         run: |
           gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} \
             --zone ${{ env.CLUSTER_ZONE }} \
             --project ${{ env.GCP_PROJECT_ID }}
       
       - name: Update Backend Image
+        if: steps.check-secrets.outputs.configured == 'true'
         run: |
           kubectl -n ${{ env.DEPLOYMENT_NAMESPACE }} set image \
             deployment/voting-app-backend \
@@ -55,6 +69,7 @@ jobs:
             --record
       
       - name: Update Frontend Image
+        if: steps.check-secrets.outputs.configured == 'true'
         run: |
           kubectl -n ${{ env.DEPLOYMENT_NAMESPACE }} set image \
             deployment/voting-app-frontend \
@@ -62,6 +77,7 @@ jobs:
             --record
       
       - name: Wait for Rollout
+        if: steps.check-secrets.outputs.configured == 'true'
         run: |
           kubectl -n ${{ env.DEPLOYMENT_NAMESPACE }} rollout status \
             deployment/voting-app-backend --timeout=5m
@@ -69,12 +85,13 @@ jobs:
             deployment/voting-app-frontend --timeout=5m
       
       - name: Verify Deployment
+        if: steps.check-secrets.outputs.configured == 'true'
         run: |
           kubectl -n ${{ env.DEPLOYMENT_NAMESPACE }} get pods
           kubectl -n ${{ env.DEPLOYMENT_NAMESPACE }} get services
       
       - name: Post Success Comment
-        if: success()
+        if: steps.check-secrets.outputs.configured == 'true' && success()
         run: |
           echo "✅ Deployment successful!"
           echo "Images deployed:"
@@ -82,8 +99,22 @@ jobs:
           echo "  Frontend: ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-frontend:${{ env.IMAGE_TAG }}"
       
       - name: Notify on Failure
-        if: failure()
+        if: steps.check-secrets.outputs.configured == 'true' && failure()
         run: |
           echo "❌ Deployment failed!"
           echo "Rollback deployment with:"
           echo "  kubectl rollout undo deployment/voting-app-backend -n ${{ env.DEPLOYMENT_NAMESPACE }}"
+      
+      - name: OIDC Secrets Not Configured
+        if: steps.check-secrets.outputs.configured == 'false'
+        run: |
+          echo "⚠️  Deploy requires OIDC setup"
+          echo ""
+          echo "To enable this workflow:"
+          echo "1. Run: bash scripts/setup-oidc-github.sh"
+          echo "2. Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
+          echo "3. Add these 2 secrets:"
+          echo "   - WORKLOAD_IDENTITY_PROVIDER (from script output)"
+          echo "   - SERVICE_ACCOUNT_EMAIL (from script output)"
+          echo ""
+          echo "For now, deploy is skipped."

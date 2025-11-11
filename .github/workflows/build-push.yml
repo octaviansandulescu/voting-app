@@ -25,20 +25,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Authenticate to Google Cloud (OIDC)
+      - name: Check OIDC Secrets Configuration
+        id: check-secrets
+        run: |
+          if [ -z "${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}" ] || [ -z "${{ secrets.SERVICE_ACCOUNT_EMAIL }}" ]; then
+            echo "configured=false" >> $GITHUB_OUTPUT
+          else
+            echo "configured=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Setup OIDC Authentication
+        if: steps.check-secrets.outputs.configured == 'true'
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
       
-      - name: Set up Cloud SDK
+      - name: Setup Cloud SDK
+        if: steps.check-secrets.outputs.configured == 'true'
         uses: google-github-actions/setup-gcloud@v2
       
       - name: Configure Docker for GCR
+        if: steps.check-secrets.outputs.configured == 'true'
         run: |
           gcloud auth configure-docker
       
       - name: Build Backend Image
+        if: steps.check-secrets.outputs.configured == 'true'
         run: |
           docker build \
             -t ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-backend:${{ env.IMAGE_TAG }} \
@@ -47,6 +60,7 @@ jobs:
             src/backend/
       
       - name: Build Frontend Image
+        if: steps.check-secrets.outputs.configured == 'true'
         run: |
           docker build \
             -t ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-frontend:${{ env.IMAGE_TAG }} \
@@ -55,16 +69,33 @@ jobs:
             src/frontend/
       
       - name: Push Backend Image
+        if: steps.check-secrets.outputs.configured == 'true'
         run: |
           docker push ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-backend:${{ env.IMAGE_TAG }}
           docker push ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-backend:latest
       
       - name: Push Frontend Image
+        if: steps.check-secrets.outputs.configured == 'true'
         run: |
           docker push ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-frontend:${{ env.IMAGE_TAG }}
           docker push ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-frontend:latest
       
       - name: Output Image Details
+        if: steps.check-secrets.outputs.configured == 'true'
         run: |
           echo "✅ Backend Image: ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-backend:${{ env.IMAGE_TAG }}"
           echo "✅ Frontend Image: ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/voting-app-frontend:${{ env.IMAGE_TAG }}"
+      
+      - name: OIDC Secrets Not Configured
+        if: steps.check-secrets.outputs.configured == 'false'
+        run: |
+          echo "⚠️  Build & Push requires OIDC setup"
+          echo ""
+          echo "To enable this workflow:"
+          echo "1. Run: bash scripts/setup-oidc-github.sh"
+          echo "2. Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
+          echo "3. Add these 2 secrets:"
+          echo "   - WORKLOAD_IDENTITY_PROVIDER (from script output)"
+          echo "   - SERVICE_ACCOUNT_EMAIL (from script output)"
+          echo ""
+          echo "For now, build is skipped. Tests still run! ✅"

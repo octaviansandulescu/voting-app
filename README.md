@@ -170,6 +170,8 @@ docker-compose down
 
 ### **Option C: KUBERNETES Mode (Production)**
 
+#### **Using Terraform + kubectl (Full Control)**
+
 ```bash
 # 1. Navigate to kubernetes deployment
 cd 3-KUBERNETES
@@ -198,7 +200,33 @@ kubectl logs -n voting-app -l app=backend -f
 terraform destroy
 ```
 
-⚠️ **Important:** The LoadBalancer IP is dynamically assigned. After each deployment, run step 5 to find the new IP address.
+#### **Using Management Scripts (Recommended for Learning)**
+
+Once Kubernetes cluster is created, use these scripts to manage deployments:
+
+```bash
+# 🚀 Start deployment
+./scripts/deployment/manage-deployment.sh start
+
+# 📊 Check status
+./scripts/deployment/manage-deployment.sh status
+
+# 🧪 Validate everything works
+./scripts/deployment/manage-deployment.sh validate
+
+# 🛑 Stop deployment (delete all resources)
+./scripts/deployment/manage-deployment.sh stop
+
+# 🔄 Full redeploy (stop + start)
+./scripts/deployment/manage-deployment.sh restart
+
+# 📚 Show help
+./scripts/deployment/manage-deployment.sh help
+```
+
+**📖 Full Documentation:** [Deployment Scripts Guide](docs/guides/DEPLOYMENT_SCRIPTS.md)
+
+⚠️ **Important:** The LoadBalancer IP is dynamically assigned. After each deployment, run `status` command to find the new IP address.
 
 ---
 

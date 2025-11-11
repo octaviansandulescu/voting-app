@@ -9,7 +9,29 @@
 
 set -e
 
-FRONTEND_IP="34.42.155.47"
+# Configuration
+NAMESPACE="voting-app"
+
+# Get LoadBalancer IP dynamically
+FRONTEND_IP=$(kubectl get svc frontend-service -n $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
+
+if [ -z "$FRONTEND_IP" ]; then
+    echo "❌ ERROR: LoadBalancer IP not assigned yet"
+    echo "Waiting for LoadBalancer IP..."
+    for i in {1..30}; do
+        FRONTEND_IP=$(kubectl get svc frontend-service -n $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
+        if [ ! -z "$FRONTEND_IP" ]; then
+            break
+        fi
+        sleep 2
+    done
+    
+    if [ -z "$FRONTEND_IP" ]; then
+        echo "❌ ERROR: LoadBalancer IP still not available"
+        exit 1
+    fi
+fi
+
 API_URL="http://$FRONTEND_IP"
 
 echo "╔════════════════════════════════════════════════════════════════════════╗"

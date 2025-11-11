@@ -25,7 +25,7 @@ spec:
       containers:
       - name: frontend
         image: gcr.io/diesel-skyline-474415-j6/voting-app-frontend:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
           name: http

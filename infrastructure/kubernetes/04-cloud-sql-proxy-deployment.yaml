@@ -1,0 +1,183 @@
+###############################################################################
+# CLOUD SQL PROXY DEPLOYMENT
+#
+# Why Cloud SQL Proxy?
+#   ✅ Secure: Uses IAM, no passwords in connection strings
+#   ✅ Stable: Service DNS name instead of IP
+#   ✅ Flexible: Works with private/public IPs
+#   ✅ Encrypted: TLS encrypted connections
+#
+# What it does:
+#   1. Authenticates to Cloud SQL using Workload Identity
+#   2. Creates secure tunnel to Cloud SQL instance
+#   3. Exposes as service on port 3306 within cluster
+#   4. Pods connect to cloud-sql-proxy:3306 (via DNS)
+#
+# Alternative: Use Cloud SQL Auth Proxy in sidecar (advanced)
+###############################################################################
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-sql-proxy
+  namespace: voting-app
+  labels:
+    app: cloud-sql-proxy
+    tier: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloud-sql-proxy
+      tier: database
+  template:
+    metadata:
+      labels:
+        app: cloud-sql-proxy
+        tier: database
+    spec:
+      # Use Workload Identity for authentication (no keys!)
+      serviceAccountName: cloud-sql-proxy-sa
+      
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 2
+      
+      containers:
+      - name: cloud-sql-proxy
+        # Official GCP Cloud SQL Proxy v1
+        # For v2: us-docker.pkg.dev/cloud-sql-connectors/cloud-sql-proxy/cloud-sql-proxy:2.x
+        image: gcr.io/cloudsql-docker/gce-proxy:1.33.2
+        
+        # Command to start proxy with Workload Identity
+        command:
+          - /cloud_sql_proxy
+          - --instances=diesel-skyline-474415-j6:us-central1:voting-app-cluster-db=tcp:0.0.0.0:3306
+          - --use-http-health-check
+        
+        # Replace INSTANCE_CONNECTION_NAME with:
+        # PROJECT_ID:REGION:INSTANCE_NAME
+        # Example: diesel-skyline-474415-j6:us-central1:voting-app-db
+        
+        ports:
+        - containerPort: 3306
+          name: mysql
+          protocol: TCP
+        
+        - containerPort: 8090
+          name: health
+          protocol: TCP
+        
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 8090
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 8090
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-sql-proxy
+  namespace: voting-app
+  labels:
+    app: cloud-sql-proxy
+spec:
+  type: ClusterIP
+  selector:
+    app: cloud-sql-proxy
+  ports:
+  - name: mysql
+    port: 3306
+    targetPort: 3306
+    protocol: TCP
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cloud-sql-proxy-sa
+  namespace: voting-app
+
+---
+# Role for Workload Identity - allows proxy to connect to Cloud SQL
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cloud-sql-proxy-role
+  namespace: voting-app
+rules:
+# This role is minimal - actual permissions are managed via:
+# gcloud iam service-accounts add-iam-policy-binding (Workload Identity)
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cloud-sql-proxy-rolebinding
+  namespace: voting-app
+subjects:
+- kind: ServiceAccount
+  name: cloud-sql-proxy-sa
+  namespace: voting-app
+roleRef:
+  kind: Role
+  name: cloud-sql-proxy-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# SETUP INSTRUCTIONS FOR WORKLOAD IDENTITY
+#
+# 1. Create Cloud IAM Service Account:
+#    gcloud iam service-accounts create cloud-sql-proxy \
+#      --display-name="Cloud SQL Proxy"
+#
+# 2. Grant Cloud SQL Client role:
+#    gcloud projects add-iam-policy-binding PROJECT_ID \
+#      --member="serviceAccount:cloud-sql-proxy@PROJECT_ID.iam.gserviceaccount.com" \
+#      --role="roles/cloudsql.client"
+#
+# 3. Setup Workload Identity binding:
+#    gcloud iam service-accounts add-iam-policy-binding \
+#      cloud-sql-proxy@PROJECT_ID.iam.gserviceaccount.com \
+#      --role roles/iam.workloadIdentityUser \
+#      --member "serviceAccount:PROJECT_ID.svc.id.goog[voting-app/cloud-sql-proxy-sa]"
+#
+# 4. Annotate Kubernetes ServiceAccount:
+#    kubectl annotate serviceaccount cloud-sql-proxy-sa \
+#      -n voting-app \
+#      iam.gke.io/gcp-service-account=cloud-sql-proxy@PROJECT_ID.iam.gserviceaccount.com
+#
+# After setup, pods can connect to:
+#   DB_HOST=cloud-sql-proxy:3306
+#   (No passwords needed - IAM handles authentication!)

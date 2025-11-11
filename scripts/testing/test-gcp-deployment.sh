@@ -89,16 +89,25 @@ create_terraform_plan() {
     
     cd "$TERRAFORM_DIR"
     
+    # Get GCP access token for Terraform authentication
+    print_warning "Authenticating with GCP..."
+    GCP_TOKEN=$(gcloud auth print-access-token 2>/dev/null || echo "")
+    if [ -z "$GCP_TOKEN" ]; then
+        print_error "Failed to get GCP access token"
+        exit 1
+    fi
+    print_success "GCP authentication token obtained"
+    
     print_warning "Initializing Terraform..."
-    terraform init -upgrade -quiet
+    terraform init -upgrade > /dev/null 2>&1
     print_success "Terraform initialized"
     
     print_warning "Validating Terraform configuration..."
-    terraform validate -quiet
+    terraform validate > /dev/null 2>&1
     print_success "Terraform configuration valid"
     
     print_warning "Creating deployment plan..."
-    terraform plan -out=tfplan -quiet
+    terraform plan -var="gcp_access_token=$GCP_TOKEN" -out=tfplan > /dev/null 2>&1
     print_success "Terraform plan created: tfplan"
     
     cd - > /dev/null
@@ -109,8 +118,15 @@ apply_terraform() {
     
     cd "$TERRAFORM_DIR"
     
-    print_warning "This will create resources on GCP (takes 15-20 minutes)..."
-    echo -e "${YELLOW}Resources to create:${NC}"
+    # Get GCP access token again for apply
+    GCP_TOKEN=$(gcloud auth print-access-token 2>/dev/null || echo "")
+    if [ -z "$GCP_TOKEN" ]; then
+        print_error "Failed to get GCP access token"
+        exit 1
+    fi
+    
+    print_warning "Creating resources on GCP (this will take 15-20 minutes)..."
+    echo -e "${YELLOW}Resources being created:${NC}"
     echo "  • GKE Cluster (3 nodes, n1-standard-2)"
     echo "  • Cloud SQL MySQL instance"
     echo "  • VPC Network"
@@ -118,15 +134,8 @@ apply_terraform() {
     echo "  • Service accounts"
     echo ""
     
-    read -p "Continue with deployment? (yes/no): " -r
-    if [[ $REPLY != "yes" ]]; then
-        print_error "Deployment cancelled"
-        exit 1
-    fi
-    
-    echo ""
-    print_warning "Applying Terraform configuration (this will take 15-20 minutes)..."
-    terraform apply tfplan
+    print_warning "Applying Terraform configuration..."
+    terraform apply -var="gcp_access_token=$GCP_TOKEN" -auto-approve tfplan > /dev/null 2>&1
     print_success "Terraform apply completed!"
     
     # Get outputs
@@ -374,14 +383,6 @@ main() {
     echo -e "${NC}"
     
     check_prerequisites
-    
-    # Ask if user wants to proceed with Terraform apply
-    echo ""
-    read -p "Create Terraform plan? (yes/no): " -r
-    if [[ $REPLY != "yes" ]]; then
-        print_error "Script cancelled"
-        exit 0
-    fi
     
     create_terraform_plan
     apply_terraform

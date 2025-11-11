@@ -1,0 +1,86 @@
+name: Deploy to GKE
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/backend/**'
+      - 'src/frontend/**'
+      - 'infrastructure/kubernetes/**'
+      - '.github/workflows/deploy.yml'
+  workflow_run:
+    workflows: ["Build & Push Docker Images"]
+    types: [completed]
+    branches: [main]
+
+env:
+  REGISTRY: gcr.io
+  IMAGE_TAG: ${{ github.sha }}
+  CLUSTER_NAME: voting-app-cluster
+  CLUSTER_ZONE: us-central1-a
+  DEPLOYMENT_NAMESPACE: voting-app
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.workflow_run.conclusion == 'success'
+    
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      
+      - name: Get GKE Credentials
+        run: |
+          gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} \
+            --zone ${{ env.CLUSTER_ZONE }} \
+            --project ${{ secrets.GCP_PROJECT_ID }}
+      
+      - name: Update Backend Image
+        run: |
+          kubectl -n ${{ env.DEPLOYMENT_NAMESPACE }} set image \
+            deployment/voting-app-backend \
+            voting-app-backend=${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-backend:${{ env.IMAGE_TAG }} \
+            --record
+      
+      - name: Update Frontend Image
+        run: |
+          kubectl -n ${{ env.DEPLOYMENT_NAMESPACE }} set image \
+            deployment/voting-app-frontend \
+            voting-app-frontend=${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-frontend:${{ env.IMAGE_TAG }} \
+            --record
+      
+      - name: Wait for Rollout
+        run: |
+          kubectl -n ${{ env.DEPLOYMENT_NAMESPACE }} rollout status \
+            deployment/voting-app-backend --timeout=5m
+          kubectl -n ${{ env.DEPLOYMENT_NAMESPACE }} rollout status \
+            deployment/voting-app-frontend --timeout=5m
+      
+      - name: Verify Deployment
+        run: |
+          kubectl -n ${{ env.DEPLOYMENT_NAMESPACE }} get pods
+          kubectl -n ${{ env.DEPLOYMENT_NAMESPACE }} get services
+      
+      - name: Post Success Comment
+        if: success()
+        run: |
+          echo "✅ Deployment successful!"
+          echo "Images deployed:"
+          echo "  Backend: ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-backend:${{ env.IMAGE_TAG }}"
+          echo "  Frontend: ${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/voting-app-frontend:${{ env.IMAGE_TAG }}"
+      
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed!"
+          echo "Rollback deployment with:"
+          echo "  kubectl rollout undo deployment/voting-app-backend -n ${{ env.DEPLOYMENT_NAMESPACE }}"

@@ -19,11 +19,11 @@ function detectAPIEndpoint() {
     const protocol = window.location.protocol;
     
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        // Local development
+        // Local development - backend on separate port
         return 'http://localhost:8000';
     } else {
-        // Production: Same host, different port or path
-        return `${protocol}//${hostname}:8000`;
+        // Production/Kubernetes: Use nginx proxy at /api
+        return `${protocol}//${hostname}/api`;
     }
 }
 

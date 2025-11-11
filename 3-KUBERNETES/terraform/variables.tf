@@ -37,3 +37,10 @@ variable "node_count" {
   type        = number
   default     = 3
 }
+
+variable "gcp_access_token" {
+  description = "GCP Access Token for Terraform authentication"
+  type        = string
+  default     = ""
+  sensitive   = true
+}

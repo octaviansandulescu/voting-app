@@ -93,6 +93,18 @@ check_gke_cluster() {
     
     if [ -z "$CLUSTERS" ]; then
         print_error "No clusters found"
+        print_info ""
+        print_info "Cluster not yet deployed. To create it, run:"
+        print_info "  ${CYAN}./test-gcp-deployment.sh${NC}"
+        print_info ""
+        print_info "This will:"
+        print_info "  1. Create GKE cluster (3 nodes)"
+        print_info "  2. Create Cloud SQL database"
+        print_info "  3. Deploy voting app"
+        print_info "  4. Set up services and LoadBalancer"
+        print_info ""
+        print_info "Time: ~20-25 minutes"
+        print_info "Cost: ~$2 for testing"
         return 1
     fi
     
@@ -122,6 +134,10 @@ check_gke_cluster() {
         print_info "Node count: $NODE_COUNT"
     else
         print_error "Cluster '$CLUSTER_NAME' not found"
+        print_info ""
+        print_info "Cluster not yet deployed. To create it, run:"
+        print_info "  ${CYAN}./test-gcp-deployment.sh${NC}"
+        print_info ""
         return 1
     fi
 }
@@ -455,6 +471,46 @@ EOF
     echo -e "${NC}"
     
     print_header "Starting Status Check"
+    
+    # Check if deployment exists first
+    CLUSTERS=$(gcloud container clusters list --region=$GCP_REGION --project=$GCP_PROJECT 2>/dev/null || echo "")
+    if [ -z "$CLUSTERS" ]; then
+        echo -e "${YELLOW}"
+        cat << "EOF"
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        🚀 DEPLOYMENT NOT FOUND                              │
+│                                                                             │
+│  Your GCP resources have not been deployed yet.                            │
+│                                                                             │
+│  TO DEPLOY:                                                                │
+│  ──────────                                                                │
+│  Run the deployment script:                                                │
+│                                                                             │
+│    $ ./test-gcp-deployment.sh                                              │
+│                                                                             │
+│  This will:                                                                │
+│    ✓ Create GKE cluster (3 nodes)                                         │
+│    ✓ Create Cloud SQL database                                            │
+│    ✓ Deploy voting app containers                                         │
+│    ✓ Configure networking & services                                      │
+│    ✓ Validate deployment                                                  │
+│                                                                             │
+│  Timeline:  ~20-25 minutes                                                │
+│  Cost:      ~$2 for testing                                               │
+│                                                                             │
+│  After deployment, you can run this script to monitor status:              │
+│    $ ./check-gcp-status.sh                                                │
+│                                                                             │
+│  Then test the app in your browser at the LoadBalancer IP!                │
+│                                                                             │
+│  When done, cleanup safely (saves ~$108/month):                           │
+│    $ ./cleanup-gcp.sh                                                     │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+EOF
+        echo -e "${NC}"
+        return 0
+    fi
     
     check_gcloud
     check_gke_cluster

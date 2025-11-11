@@ -21,6 +21,10 @@ terraform {
 provider "google" {
   project = var.project_id
   region  = var.region
+  
+  # Use access token from gcloud
+  # Get token: gcloud auth print-access-token
+  access_token = var.gcp_access_token != "" ? var.gcp_access_token : null
 }
 
 # ============================================================================
@@ -67,6 +71,23 @@ resource "google_compute_subnetwork" "voting_subnet" {
   }
 }
 
+# Private service connection for Cloud SQL
+resource "google_compute_global_address" "private_ip_address" {
+  name          = "${var.cluster_name}-private-ip"
+  purpose       = "VPC_PEERING"
+  address_type  = "INTERNAL"
+  prefix_length = 16
+  network       = google_compute_network.voting_vpc.id
+
+  depends_on = [google_project_service.required_apis]
+}
+
+resource "google_service_networking_connection" "private_vpc_connection" {
+  network                 = google_compute_network.voting_vpc.id
+  service                 = "servicenetworking.googleapis.com"
+  reserved_peering_ranges = [google_compute_global_address.private_ip_address.name]
+}
+
 # ============================================================================
 # Cloud SQL MySQL Instance
 # ============================================================================
@@ -77,6 +98,11 @@ resource "google_sql_database_instance" "voting_db" {
   region           = var.region
   deletion_protection = false
 
+  depends_on = [
+    google_service_networking_connection.private_vpc_connection,
+    google_project_service.required_apis
+  ]
+
   settings {
     tier      = "db-f1-micro"
     disk_size = 20
@@ -86,15 +112,11 @@ resource "google_sql_database_instance" "voting_db" {
     }
 
     ip_configuration {
-      # Allow connections from GKE cluster
-      authorized_networks {
-        name  = "gke-cluster"
-        value = "0.0.0.0/0"  # In production, restrict this!
-      }
+      # Use private IP only - more secure for GKE
+      ipv4_enabled = false
+      private_network = google_compute_network.voting_vpc.id
     }
   }
-
-  depends_on = [google_project_service.required_apis]
 }
 
 resource "google_sql_database" "voting_db" {

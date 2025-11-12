@@ -114,6 +114,37 @@ if [ -z "$CLUSTER_NAME" ]; then
     echo -e "${YELLOW}⚠️  No cluster found. Creating one with Terraform...${NC}"
     echo ""
     
+    # Check if required APIs are enabled
+    echo -e "${BLUE}📡 Checking if required APIs are enabled...${NC}"
+    REQUIRED_APIS=(
+        "container.googleapis.com"
+        "sqladmin.googleapis.com"
+        "compute.googleapis.com"
+        "servicenetworking.googleapis.com"
+    )
+    
+    APIS_OK=true
+    for api in "${REQUIRED_APIS[@]}"; do
+        if gcloud services list --enabled --project="$PROJECT_ID" 2>/dev/null | grep -q "$api"; then
+            echo -e "${GREEN}  ✅ $api${NC}"
+        else
+            echo -e "${YELLOW}  ⚠️  $api (not enabled)${NC}"
+            APIS_OK=false
+        fi
+    done
+    
+    if [ "$APIS_OK" = false ]; then
+        echo ""
+        echo -e "${YELLOW}📌 Some APIs are not enabled. Attempting to enable them...${NC}"
+        for api in "${REQUIRED_APIS[@]}"; do
+            gcloud services enable "$api" --project="$PROJECT_ID" 2>/dev/null || \
+                echo -e "${YELLOW}  ⚠️  Could not enable $api (may need admin permission)${NC}"
+        done
+        echo ""
+    fi
+    
+    echo ""
+    
     # Check if terraform is initialized
     if [ ! -f "$TERRAFORM_DIR/.terraform/terraform.tfstate" ] && [ ! -d "$TERRAFORM_DIR/.terraform" ]; then
         echo -e "${BLUE}Initializing Terraform...${NC}"

@@ -9,7 +9,9 @@
 
 set -e
 
+# Get absolute paths (works from any directory)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../" && pwd)"
 
 # Color codes
 RED='\033[0;31m'
@@ -18,8 +20,8 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-MANIFESTS_DIR="infrastructure/kubernetes"
-TERRAFORM_DIR="3-KUBERNETES/terraform"
+MANIFESTS_DIR="$PROJECT_ROOT/infrastructure/kubernetes"
+TERRAFORM_DIR="$PROJECT_ROOT/3-KUBERNETES/terraform"
 
 echo "╔════════════════════════════════════════════════════════════════════════╗"
 echo "║               Kubernetes Deployment - START                            ║"
@@ -52,14 +54,14 @@ if [ -z "$CLUSTER_NAME" ]; then
         echo -e "${BLUE}Initializing Terraform...${NC}"
         cd "$TERRAFORM_DIR"
         terraform init
-        cd - > /dev/null
+        cd "$SCRIPT_DIR" || cd - > /dev/null
     fi
     
     # Apply terraform
     echo -e "${BLUE}Creating GKE cluster...${NC}"
     cd "$TERRAFORM_DIR"
     terraform apply -auto-approve
-    cd - > /dev/null
+    cd "$SCRIPT_DIR" || cd - > /dev/null
     
     echo -e "${GREEN}✅ Cluster created${NC}"
     echo ""
@@ -98,10 +100,10 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 # 1. Create secrets
 echo -e "${BLUE}Step 1/5: Creating secrets...${NC}"
-if kubectl get secret -n $NAMESPACE voting-secrets &> /dev/null; then
+if kubectl get secret -n "$NAMESPACE" voting-secrets &> /dev/null; then
     echo -e "${YELLOW}⚠️  Secret already exists, skipping...${NC}"
 else
-    kubectl apply -f $MANIFESTS_DIR/01-secrets.yaml
+    kubectl apply -f "$MANIFESTS_DIR/01-secrets.yaml" -n "$NAMESPACE"
     echo -e "${GREEN}✅ Secrets created${NC}"
 fi
 echo ""
@@ -115,7 +117,7 @@ echo ""
 
 # 3. Deploy Backend
 echo -e "${BLUE}Step 3/5: Deploying Backend...${NC}"
-if kubectl apply -f $MANIFESTS_DIR/02-backend-deployment.yaml; then
+if kubectl apply -f "$MANIFESTS_DIR/02-backend-deployment.yaml" -n "$NAMESPACE"; then
     echo -e "${GREEN}✅ Backend deployment applied${NC}"
 else
     echo -e "${RED}❌ Failed to deploy backend${NC}"
@@ -125,7 +127,7 @@ echo ""
 
 # 4. Deploy Frontend
 echo -e "${BLUE}Step 4/5: Deploying Frontend...${NC}"
-if kubectl apply -f $MANIFESTS_DIR/03-frontend-deployment.yaml; then
+if kubectl apply -f "$MANIFESTS_DIR/03-frontend-deployment.yaml" -n "$NAMESPACE"; then
     echo -e "${GREEN}✅ Frontend deployment applied${NC}"
 else
     echo -e "${RED}❌ Failed to deploy frontend${NC}"

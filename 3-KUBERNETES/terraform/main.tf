@@ -36,21 +36,9 @@ provider "google" {
   region  = var.region
 }
 
-# ============================================================================
-# Enable Required APIs
-# ============================================================================
-
-resource "google_project_service" "required_apis" {
-  for_each = toset([
-    "container.googleapis.com",
-    "sqladmin.googleapis.com",
-    "compute.googleapis.com",
-    "servicenetworking.googleapis.com"
-  ])
-
-  service            = each.value
-  disable_on_destroy = false
-}
+# NOTE: Required APIs must be enabled manually or by an admin before running terraform
+# This is because service account typically has minimal permissions for security
+# Enable APIs with: gcloud services enable container.googleapis.com sqladmin.googleapis.com compute.googleapis.com servicenetworking.googleapis.com
 
 # ============================================================================
 # VPC Network
@@ -59,8 +47,6 @@ resource "google_project_service" "required_apis" {
 resource "google_compute_network" "voting_vpc" {
   name                    = "${var.cluster_name}-vpc"
   auto_create_subnetworks = false
-
-  depends_on = [google_project_service.required_apis]
 }
 
 resource "google_compute_subnetwork" "voting_subnet" {
@@ -87,8 +73,6 @@ resource "google_compute_global_address" "private_ip_address" {
   address_type  = "INTERNAL"
   prefix_length = 16
   network       = google_compute_network.voting_vpc.id
-
-  depends_on = [google_project_service.required_apis]
 }
 
 resource "google_service_networking_connection" "private_vpc_connection" {
@@ -108,8 +92,7 @@ resource "google_sql_database_instance" "voting_db" {
   deletion_protection = false
 
   depends_on = [
-    google_service_networking_connection.private_vpc_connection,
-    google_project_service.required_apis
+    google_service_networking_connection.private_vpc_connection
   ]
 
   settings {
@@ -173,8 +156,6 @@ resource "google_container_cluster" "voting_cluster" {
       disabled = false
     }
   }
-
-  depends_on = [google_project_service.required_apis]
 }
 
 # ============================================================================

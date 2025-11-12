@@ -3,9 +3,14 @@
 # ============================================================================
 # Kubernetes Deployment STATUS Script
 # ============================================================================
-# Check deployment status and health of all components
+# Auto-detects cluster, namespace, and Cloud SQL resources
+# Checks deployment status and health of all components
 # Run: ./status-deployment.sh
 # ============================================================================
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Color codes
 RED='\033[0;31m'
@@ -15,89 +20,128 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Configuration
-PROJECT_ID=$(gcloud config get-value project)
-CLUSTER_NAME="voting-cluster"
-ZONE="us-central1-a"  # Use zone for gcloud container clusters
-NAMESPACE="voting-app"
-
 echo "╔════════════════════════════════════════════════════════════════════════╗"
 echo "║            Kubernetes Deployment - STATUS CHECK                        ║"
 echo "╚════════════════════════════════════════════════════════════════════════╝"
 echo ""
 
-# Check if namespace exists
-if ! kubectl get namespace $NAMESPACE &> /dev/null; then
-    echo -e "${RED}❌ Namespace '$NAMESPACE' not found${NC}"
+# Source detection script to auto-discover resources
+source "$SCRIPT_DIR/detect-resources.sh"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# VALIDATION: Check if resources exist
+# ═══════════════════════════════════════════════════════════════════════════════
+
+if [ -z "$CLUSTER_NAME" ]; then
+    echo -e "${RED}❌ No Kubernetes cluster found!${NC}"
     echo ""
-    echo "To deploy: ./scripts/deployment/start-deployment.sh"
+    echo "To create a cluster and deploy:"
+    echo "  cd 3-KUBERNETES/terraform && terraform apply"
+    echo "  ./scripts/deployment/start-deployment.sh"
+    echo ""
     exit 0
 fi
 
-# Get cluster info
+if [ -z "$NAMESPACE" ]; then
+    echo -e "${RED}❌ No application namespace found!${NC}"
+    echo ""
+    echo "Available namespaces:"
+    gcloud container clusters get-credentials "$CLUSTER_NAME" \
+        --zone "$CLUSTER_ZONE" \
+        --project "$PROJECT_ID" 2>/dev/null || true
+    
+    kubectl get namespaces 2>/dev/null || true
+    echo ""
+    exit 0
+fi
+
+# Get credentials
+gcloud container clusters get-credentials "$CLUSTER_NAME" \
+    --zone "$CLUSTER_ZONE" \
+    --project "$PROJECT_ID" 2>/dev/null
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# DISPLAY: Cluster Information
+# ═══════════════════════════════════════════════════════════════════════════════
+
 echo -e "${BLUE}📊 Cluster Information${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Cluster:   $CLUSTER_NAME"
-echo "Region:    $REGION"
+echo "Zone:      $CLUSTER_ZONE"
 echo "Project:   $PROJECT_ID"
 echo "Namespace: $NAMESPACE"
 echo ""
 
-# Check namespace status
+# ═══════════════════════════════════════════════════════════════════════════════
+# DISPLAY: Namespace Status
+# ═══════════════════════════════════════════════════════════════════════════════
+
 echo -e "${BLUE}📦 Namespace Status${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-kubectl get namespace $NAMESPACE -o wide
+kubectl get namespace "$NAMESPACE" -o wide 2>/dev/null || echo "Namespace not found"
 echo ""
 
-# Check pods status
+# ═══════════════════════════════════════════════════════════════════════════════
+# DISPLAY: Pod Status
+# ═══════════════════════════════════════════════════════════════════════════════
+
 echo -e "${BLUE}🐳 Pod Status${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-PODS=$(kubectl get pods -n $NAMESPACE --no-headers 2>/dev/null | wc -l)
-if [ $PODS -eq 0 ]; then
+PODS=$(kubectl get pods -n "$NAMESPACE" --no-headers 2>/dev/null | wc -l)
+if [ "$PODS" -eq 0 ]; then
     echo -e "${YELLOW}⚠️  No pods running${NC}"
 else
-    RUNNING=$(kubectl get pods -n $NAMESPACE --field-selector=status.phase=Running --no-headers 2>/dev/null | wc -l)
+    RUNNING=$(kubectl get pods -n "$NAMESPACE" --field-selector=status.phase=Running --no-headers 2>/dev/null | wc -l)
     echo -e "Total Pods:   $PODS"
     echo -e "Running:      ${GREEN}$RUNNING${NC}"
-    if [ $RUNNING -lt $PODS ]; then
+    if [ "$RUNNING" -lt "$PODS" ]; then
         NOT_READY=$((PODS - RUNNING))
         echo -e "Not Ready:    ${YELLOW}$NOT_READY${NC}"
     fi
 fi
 echo ""
-kubectl get pods -n $NAMESPACE -o wide
+kubectl get pods -n "$NAMESPACE" -o wide 2>/dev/null || true
 echo ""
 
-# Check deployments
+# ═══════════════════════════════════════════════════════════════════════════════
+# DISPLAY: Deployment Status
+# ═══════════════════════════════════════════════════════════════════════════════
+
 echo -e "${BLUE}🚀 Deployment Status${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-kubectl get deployments -n $NAMESPACE -o wide
+kubectl get deployments -n "$NAMESPACE" -o wide 2>/dev/null || echo "No deployments found"
 echo ""
 
-# Check services
+# ═══════════════════════════════════════════════════════════════════════════════
+# DISPLAY: Service Status
+# ═══════════════════════════════════════════════════════════════════════════════
+
 echo -e "${BLUE}🌐 Service Status${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-kubectl get svc -n $NAMESPACE -o wide
+kubectl get svc -n "$NAMESPACE" -o wide 2>/dev/null || echo "No services found"
 echo ""
 
-# Get Frontend LoadBalancer IP
+# ═══════════════════════════════════════════════════════════════════════════════
+# DISPLAY: Frontend Access
+# ═══════════════════════════════════════════════════════════════════════════════
+
 echo -e "${BLUE}📡 Frontend Access${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-FRONTEND_IP=$(kubectl get svc frontend-service -n $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
+FRONTEND_IP=$(kubectl get svc frontend -n "$NAMESPACE" -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+
 if [ ! -z "$FRONTEND_IP" ]; then
     echo -e "${GREEN}✅ Frontend URL: http://$FRONTEND_IP${NC}"
     
     # Test connectivity
-    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://$FRONTEND_IP" 2>/dev/null)
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://$FRONTEND_IP" 2>/dev/null || echo "000")
     if [ "$HTTP_CODE" = "200" ]; then
-        echo -e "${GREEN}✅ Frontend is responding (HTTP $HTTP_CODE)${NC}"
+        echo -e "${GREEN}✅ Frontend responding (HTTP $HTTP_CODE)${NC}"
     else
-        echo -e "${YELLOW}⚠️  Frontend responding with HTTP $HTTP_CODE${NC}"
+        echo -e "${YELLOW}⚠️  Frontend HTTP $HTTP_CODE${NC}"
     fi
 else
-    echo -e "${YELLOW}⏳ LoadBalancer IP not assigned yet${NC}"
-    echo -e "   This is normal on first deployment (1-5 minutes)"
-    echo -e "   Keep checking: ./scripts/deployment/status-deployment.sh"
+    echo -e "${YELLOW}⏳ LoadBalancer IP pending${NC}"
+    echo -e "   (normal on first deployment, check again in 1-5 min)"
 fi
 echo ""
 

@@ -3,11 +3,13 @@
 # ============================================================================
 # Kubernetes Deployment START Script
 # ============================================================================
-# Deploy voting app to GKE cluster
+# Auto-detects resources and deploys voting app to GKE
 # Run: ./start-deployment.sh
 # ============================================================================
 
 set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Color codes
 RED='\033[0;31m'
@@ -16,12 +18,8 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuration
-PROJECT_ID=$(gcloud config get-value project)
-CLUSTER_NAME="voting-cluster"
-ZONE="us-central1-a"  # Use zone for gcloud container clusters
-NAMESPACE="voting-app"
 MANIFESTS_DIR="infrastructure/kubernetes"
+TERRAFORM_DIR="3-KUBERNETES/terraform"
 
 echo "╔════════════════════════════════════════════════════════════════════════╗"
 echo "║               Kubernetes Deployment - START                            ║"
@@ -41,23 +39,60 @@ fi
 echo -e "${GREEN}✅ Prerequisites OK${NC}"
 echo ""
 
-# Get cluster credentials
-echo -e "${BLUE}🔑 Getting cluster credentials...${NC}"
-gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE --project $PROJECT_ID
-echo -e "${GREEN}✅ Connected to cluster: $CLUSTER_NAME${NC}"
-echo ""
+# Try to detect cluster, create if doesn't exist
+echo -e "${BLUE}🔍 Detecting cluster...${NC}"
+source "$SCRIPT_DIR/detect-resources.sh"
 
-# Create namespace if it doesn't exist
-echo -e "${BLUE}📦 Creating namespace...${NC}"
-if kubectl get namespace $NAMESPACE &> /dev/null; then
-    echo -e "${YELLOW}⚠️  Namespace already exists${NC}"
+if [ -z "$CLUSTER_NAME" ]; then
+    echo -e "${YELLOW}⚠️  No cluster found. Creating one with Terraform...${NC}"
+    echo ""
+    
+    # Check if terraform is initialized
+    if [ ! -f "$TERRAFORM_DIR/.terraform/terraform.tfstate" ] && [ ! -d "$TERRAFORM_DIR/.terraform" ]; then
+        echo -e "${BLUE}Initializing Terraform...${NC}"
+        cd "$TERRAFORM_DIR"
+        terraform init
+        cd - > /dev/null
+    fi
+    
+    # Apply terraform
+    echo -e "${BLUE}Creating GKE cluster...${NC}"
+    cd "$TERRAFORM_DIR"
+    terraform apply -auto-approve
+    cd - > /dev/null
+    
+    echo -e "${GREEN}✅ Cluster created${NC}"
+    echo ""
+    
+    # Re-detect after creation
+    source "$SCRIPT_DIR/detect-resources.sh"
 else
-    kubectl create namespace $NAMESPACE
-    echo -e "${GREEN}✅ Namespace created${NC}"
+    echo -e "${GREEN}✅ Found cluster: $CLUSTER_NAME${NC}"
 fi
 echo ""
 
-# Apply manifests in order
+# Get cluster credentials
+echo -e "${BLUE}🔑 Getting cluster credentials...${NC}"
+gcloud container clusters get-credentials "$CLUSTER_NAME" \
+    --zone "$CLUSTER_ZONE" \
+    --project "$PROJECT_ID"
+echo -e "${GREEN}✅ Connected to cluster: $CLUSTER_NAME${NC}"
+echo ""
+
+# Create or reuse namespace
+if [ -z "$NAMESPACE" ]; then
+    NAMESPACE="voting-app"
+fi
+
+echo -e "${BLUE}📦 Setting up namespace...${NC}"
+if kubectl get namespace "$NAMESPACE" &> /dev/null; then
+    echo -e "${YELLOW}ℹ️  Using existing namespace: $NAMESPACE${NC}"
+else
+    echo -e "Creating namespace: $NAMESPACE"
+    kubectl create namespace "$NAMESPACE"
+    echo -e "${GREEN}✅ Namespace created${NC}"
+fi
+echo ""
 echo -e "${BLUE}🚀 Deploying application...${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 

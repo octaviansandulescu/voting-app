@@ -209,26 +209,49 @@ echo ""
 echo -e "${BLUE}🚀 Deploying application...${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# 1. Create secrets
-echo -e "${BLUE}Step 1/5: Creating secrets...${NC}"
-if kubectl get secret -n "$NAMESPACE" voting-secrets &> /dev/null; then
-    echo -e "${YELLOW}⚠️  Secret already exists, skipping...${NC}"
+# 1. Generate secrets from Terraform outputs
+echo -e "${BLUE}Step 1/6: Generating secrets from Terraform...${NC}"
+if "$SCRIPT_DIR/generate-secrets.sh"; then
+    SECRETS_FILE="$SCRIPT_DIR/01-secrets-generated.yaml"
+    echo -e "${GREEN}✅ Secrets generated${NC}"
 else
-    kubectl apply -f "$MANIFESTS_DIR/01-secrets.yaml" -n "$NAMESPACE"
-    echo -e "${GREEN}✅ Secrets created${NC}"
+    echo -e "${RED}❌ Failed to generate secrets${NC}"
+    exit 1
 fi
 echo ""
 
-# 2. Deploy Cloud SQL Proxy (optional - for now skip due to image availability)
-echo -e "${BLUE}Step 2/5: Checking Cloud SQL Proxy...${NC}"
+# 2. Create secrets
+echo -e "${BLUE}Step 2/6: Creating secrets...${NC}"
+if kubectl apply -f "$SECRETS_FILE" -n "$NAMESPACE"; then
+    echo -e "${GREEN}✅ Secrets created${NC}"
+else
+    echo -e "${RED}❌ Failed to create secrets${NC}"
+    exit 1
+fi
+echo ""
+
+# 3. Deploy Cloud SQL Proxy (optional - for now skip due to image availability)
+echo -e "${BLUE}Step 3/6: Checking Cloud SQL Proxy...${NC}"
 echo -e "${YELLOW}⚠️  Cloud SQL Proxy skipped (using direct Cloud SQL IP for MVP)${NC}"
 echo -e "${YELLOW}   Tip: For production, setup Cloud SQL Proxy with Workload Identity${NC}"
 echo -e "${YELLOW}   See: docs/guides/CLOUD_SQL_PROXY_SETUP.md${NC}"
 echo ""
 
-# 3. Deploy Backend
-echo -e "${BLUE}Step 3/5: Deploying Backend...${NC}"
-if kubectl apply -f "$MANIFESTS_DIR/02-backend-deployment.yaml" -n "$NAMESPACE"; then
+# 4. Initialize database schema
+echo -e "${BLUE}Step 4/6: Initializing database schema...${NC}"
+if kubectl apply -f "$PROJECT_ROOT/3-KUBERNETES/k8s/01-db-init-job.yaml" -n "$NAMESPACE"; then
+    echo -e "⏳ Waiting for database initialization job..."
+    kubectl wait --for=condition=complete job/db-init -n "$NAMESPACE" --timeout=120s 2>/dev/null || \
+        echo -e "${YELLOW}⚠️  Job still running (may complete after pods start)${NC}"
+    echo -e "${GREEN}✅ Database initialization complete or in progress${NC}"
+else
+    echo -e "${YELLOW}⚠️  Database initialization job may already exist${NC}"
+fi
+echo ""
+
+# 5. Deploy Backend
+echo -e "${BLUE}Step 5/6: Deploying Backend...${NC}"
+if kubectl apply -f "$PROJECT_ROOT/3-KUBERNETES/k8s/02-backend-deployment.yaml" -n "$NAMESPACE"; then
     echo -e "${GREEN}✅ Backend deployment applied${NC}"
 else
     echo -e "${RED}❌ Failed to deploy backend${NC}"
@@ -236,9 +259,9 @@ else
 fi
 echo ""
 
-# 4. Deploy Frontend
-echo -e "${BLUE}Step 4/5: Deploying Frontend...${NC}"
-if kubectl apply -f "$MANIFESTS_DIR/03-frontend-deployment.yaml" -n "$NAMESPACE"; then
+# 6. Deploy Frontend
+echo -e "${BLUE}Step 6/6: Deploying Frontend...${NC}"
+if kubectl apply -f "$PROJECT_ROOT/3-KUBERNETES/k8s/03-frontend-deployment.yaml" -n "$NAMESPACE"; then
     echo -e "${GREEN}✅ Frontend deployment applied${NC}"
 else
     echo -e "${RED}❌ Failed to deploy frontend${NC}"
@@ -246,8 +269,8 @@ else
 fi
 echo ""
 
-# 5. Wait for deployments to be ready
-echo -e "${BLUE}Step 5/5: Waiting for deployments to be ready...${NC}"
+# Wait for deployments to be ready
+echo -e "${BLUE}Waiting for deployments to be ready...${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Wait for Backend

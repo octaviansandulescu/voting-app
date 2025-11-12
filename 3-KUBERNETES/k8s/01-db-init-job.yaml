@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-init
+  namespace: voting-app
+spec:
+  template:
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: mysql-client
+        image: mysql:8.0
+        command:
+          - bash
+          - -c
+          - |
+            DB_PASSWORD='UbN85yVhA)lZ=4aQWB!A6Yw-0<bou<q!'
+            mysql -h ${DB_HOST} -u ${DB_USER} -p${DB_PASSWORD} \
+              -e "CREATE DATABASE IF NOT EXISTS voting_app_k8s; USE voting_app_k8s; CREATE TABLE IF NOT EXISTS votes (id INT AUTO_INCREMENT PRIMARY KEY, vote VARCHAR(50) NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, INDEX idx_vote (vote)); INSERT IGNORE INTO votes (vote) VALUES ('dogs'), ('cats'); SELECT COUNT(*) as vote_count FROM votes;"
+        env:
+        - name: DB_HOST
+          value: "34.132.129.52"
+        - name: DB_USER
+          value: "voting_user"
+      restartPolicy: Never
+  backoffLimit: 3

@@ -67,19 +67,21 @@ resource "google_compute_subnetwork" "voting_subnet" {
 }
 
 # Private service connection for Cloud SQL
-resource "google_compute_global_address" "private_ip_address" {
-  name          = "${var.cluster_name}-private-ip"
-  purpose       = "VPC_PEERING"
-  address_type  = "INTERNAL"
-  prefix_length = 16
-  network       = google_compute_network.voting_vpc.id
-}
+# NOTE: Private VPC peering disabled - using public IP for simplicity
+# Uncomment below if you want private IP access to Cloud SQL (requires servicenetworking.admin role)
+# resource "google_compute_global_address" "private_ip_address" {
+#   name          = "${var.cluster_name}-private-ip"
+#   purpose       = "VPC_PEERING"
+#   address_type  = "INTERNAL"
+#   prefix_length = 16
+#   network       = google_compute_network.voting_vpc.id
+# }
 
-resource "google_service_networking_connection" "private_vpc_connection" {
-  network                 = google_compute_network.voting_vpc.id
-  service                 = "servicenetworking.googleapis.com"
-  reserved_peering_ranges = [google_compute_global_address.private_ip_address.name]
-}
+# resource "google_service_networking_connection" "private_vpc_connection" {
+#   network                 = google_compute_network.voting_vpc.id
+#   service                 = "servicenetworking.googleapis.com"
+#   reserved_peering_ranges = [google_compute_global_address.private_ip_address.name]
+# }
 
 # ============================================================================
 # Cloud SQL MySQL Instance
@@ -101,8 +103,15 @@ resource "google_sql_database_instance" "voting_db" {
 
     ip_configuration {
       # Use public IP for simplicity (can access from GKE via network)
-      ipv4_enabled    = true
-      require_ssl     = false
+      ipv4_enabled = true
+      # Don't require SSL for simplicity (can enable later)
+      # require_ssl is deprecated - use ssl_mode instead
+      
+      # Allow connections from any IP (for simplicity, can be restricted later)
+      authorized_networks {
+        name  = "allow-all"
+        value = "0.0.0.0/0"
+      }
     }
   }
 }
@@ -190,6 +199,25 @@ resource "google_container_node_pool" "voting_nodes" {
     auto_repair  = true
     auto_upgrade = true
   }
+}
+
+# ============================================================================
+# Firewall Rule - Allow GKE nodes to Cloud SQL
+# ============================================================================
+
+resource "google_compute_firewall" "allow_gke_to_cloudsql" {
+  name    = "${var.cluster_name}-allow-to-cloudsql"
+  network = google_compute_network.voting_vpc.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["3306"]
+  }
+
+  # Allow traffic from GKE nodes (all nodes in this VPC)
+  source_ranges = ["10.0.0.0/8"]  # VPC CIDR range for cluster nodes
+  
+  target_tags = ["gke-node"]
 }
 
 # ============================================================================

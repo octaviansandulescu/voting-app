@@ -75,3 +75,4 @@ htmlcov/
 .pytest_cache/
 .terraform/
 tfplan
+scripts/deployment/01-secrets-generated.yaml

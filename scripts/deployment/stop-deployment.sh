@@ -19,7 +19,7 @@ NC='\033[0m' # No Color
 # Configuration
 PROJECT_ID=$(gcloud config get-value project)
 CLUSTER_NAME="voting-cluster"
-REGION="us-central1"
+ZONE="us-central1-a"  # Use zone for gcloud container clusters
 NAMESPACE="voting-app"
 
 echo "╔════════════════════════════════════════════════════════════════════════╗"
@@ -58,7 +58,7 @@ echo ""
 
 # Get cluster credentials
 echo -e "${BLUE}🔑 Getting cluster credentials...${NC}"
-gcloud container clusters get-credentials $CLUSTER_NAME --region $REGION --project $PROJECT_ID
+gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE --project $PROJECT_ID
 echo -e "${GREEN}✅ Connected to cluster: $CLUSTER_NAME${NC}"
 echo ""
 

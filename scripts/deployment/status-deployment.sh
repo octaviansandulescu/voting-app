@@ -18,7 +18,7 @@ NC='\033[0m' # No Color
 # Configuration
 PROJECT_ID=$(gcloud config get-value project)
 CLUSTER_NAME="voting-cluster"
-REGION="us-central1"
+ZONE="us-central1-a"  # Use zone for gcloud container clusters
 NAMESPACE="voting-app"
 
 echo "╔════════════════════════════════════════════════════════════════════════╗"
@@ -83,19 +83,21 @@ echo ""
 # Get Frontend LoadBalancer IP
 echo -e "${BLUE}📡 Frontend Access${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-FRONTEND_IP=$(kubectl get svc frontend -n $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
+FRONTEND_IP=$(kubectl get svc frontend-service -n $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
 if [ ! -z "$FRONTEND_IP" ]; then
     echo -e "${GREEN}✅ Frontend URL: http://$FRONTEND_IP${NC}"
     
     # Test connectivity
-    if curl -s -o /dev/null -w "%{http_code}" "http://$FRONTEND_IP" 2>/dev/null | grep -q "200"; then
-        echo -e "${GREEN}✅ Frontend is responding${NC}"
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://$FRONTEND_IP" 2>/dev/null)
+    if [ "$HTTP_CODE" = "200" ]; then
+        echo -e "${GREEN}✅ Frontend is responding (HTTP $HTTP_CODE)${NC}"
     else
-        echo -e "${YELLOW}⚠️  Frontend not responding yet${NC}"
+        echo -e "${YELLOW}⚠️  Frontend responding with HTTP $HTTP_CODE${NC}"
     fi
 else
-    echo -e "${YELLOW}⚠️  LoadBalancer IP not assigned yet${NC}"
-    echo "This can take 1-5 minutes on first deployment."
+    echo -e "${YELLOW}⏳ LoadBalancer IP not assigned yet${NC}"
+    echo -e "   This is normal on first deployment (1-5 minutes)"
+    echo -e "   Keep checking: ./scripts/deployment/status-deployment.sh"
 fi
 echo ""
 
@@ -112,37 +114,28 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 # Check each component
 BACKEND_READY=$(kubectl get deployment backend -n $NAMESPACE -o jsonpath='{.status.conditions[?(@.type=="Available")].status}' 2>/dev/null)
 FRONTEND_READY=$(kubectl get deployment frontend -n $NAMESPACE -o jsonpath='{.status.conditions[?(@.type=="Available")].status}' 2>/dev/null)
-PROXY_READY=$(kubectl get deployment cloud-sql-proxy -n $NAMESPACE -o jsonpath='{.status.conditions[?(@.type=="Available")].status}' 2>/dev/null)
 
 if [ "$BACKEND_READY" = "True" ]; then
-    echo -e "Backend:         ${GREEN}✅ Ready${NC}"
+    echo -e "Backend:  ${GREEN}✅ Ready${NC}"
 else
-    echo -e "Backend:         ${YELLOW}⚠️  Not Ready${NC}"
+    echo -e "Backend:  ${YELLOW}⚠️  Not Ready${NC}"
 fi
 
 if [ "$FRONTEND_READY" = "True" ]; then
-    echo -e "Frontend:        ${GREEN}✅ Ready${NC}"
+    echo -e "Frontend: ${GREEN}✅ Ready${NC}"
 else
-    echo -e "Frontend:        ${YELLOW}⚠️  Not Ready${NC}"
+    echo -e "Frontend: ${YELLOW}⚠️  Not Ready${NC}"
 fi
 
-if [ "$PROXY_READY" = "True" ]; then
-    echo -e "Cloud SQL Proxy: ${GREEN}✅ Ready${NC}"
-else
-    echo -e "Cloud SQL Proxy: ${YELLOW}⚠️  Not Ready${NC}"
-fi
+# Note about Cloud SQL connection
+echo -e ""
+echo -e "${CYAN}🗄️  Database:${NC} Using direct Cloud SQL IP (35.202.121.162)"
+echo -e "${CYAN}   📝 TODO:${NC} Setup Cloud SQL Proxy for production"
+echo -e "${CYAN}   📖 Guide:${NC} docs/guides/CLOUD_SQL_PROXY_SETUP.md"
 echo ""
-
-# Quick commands reference
-echo -e "${CYAN}📚 Useful Commands${NC}"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "View logs:"
+echo "Quick commands:"
 echo "  kubectl logs -n $NAMESPACE -l app=backend -f"
 echo ""
-echo "Run validation tests:"
-echo "  ./scripts/deployment/validate-deployment.sh"
-echo ""
-echo "Restart deployment:"
-echo "  ./scripts/deployment/stop-deployment.sh"
-echo "  ./scripts/deployment/start-deployment.sh"
+echo "Test API:"
+echo "  curl http://<IP>/api/results"
 echo ""

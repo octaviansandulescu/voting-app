@@ -19,7 +19,7 @@ NC='\033[0m' # No Color
 # Configuration
 PROJECT_ID=$(gcloud config get-value project)
 CLUSTER_NAME="voting-cluster"
-REGION="us-central1"
+ZONE="us-central1-a"  # Use zone for gcloud container clusters
 NAMESPACE="voting-app"
 MANIFESTS_DIR="infrastructure/kubernetes"
 
@@ -43,7 +43,7 @@ echo ""
 
 # Get cluster credentials
 echo -e "${BLUE}🔑 Getting cluster credentials...${NC}"
-gcloud container clusters get-credentials $CLUSTER_NAME --region $REGION --project $PROJECT_ID
+gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE --project $PROJECT_ID
 echo -e "${GREEN}✅ Connected to cluster: $CLUSTER_NAME${NC}"
 echo ""
 
@@ -116,22 +116,31 @@ echo ""
 
 # Get LoadBalancer IP
 echo -e "${BLUE}📡 Getting LoadBalancer IP...${NC}"
-echo "⏳ Waiting for external IP assignment..."
-for i in {1..30}; do
+echo "⏳ Waiting for external IP assignment (can take 2-5 minutes)..."
+for i in {1..60}; do
     EXTERNAL_IP=$(kubectl get svc frontend -n $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
     if [ ! -z "$EXTERNAL_IP" ]; then
+        echo ""
         echo -e "${GREEN}✅ Frontend available at: http://$EXTERNAL_IP${NC}"
         break
     fi
-    if [ $i -eq 30 ]; then
-        echo -e "${YELLOW}⚠️  LoadBalancer IP not assigned yet. Check later with:${NC}"
-        echo "    kubectl get svc frontend -n $NAMESPACE"
-    fi
     echo -n "."
     sleep 2
+    
+    if [ $((i % 10)) -eq 0 ]; then
+        echo " (${i}s)"
+    fi
 done
-echo ""
-echo ""
+
+if [ -z "$EXTERNAL_IP" ]; then
+    echo ""
+    echo -e "${YELLOW}⏱️  LoadBalancer IP still being assigned...${NC}"
+    echo -e "${YELLOW}   Check status in a few minutes:${NC}"
+    echo "    ./scripts/deployment/status-deployment.sh"
+    echo ""
+    echo -e "   Or manually:"
+    echo "    kubectl get svc frontend-service -n $NAMESPACE"
+fi
 
 # Summary
 echo "╔════════════════════════════════════════════════════════════════════════╗"

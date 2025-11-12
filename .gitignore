@@ -9,12 +9,27 @@
 !.env.docker.example
 !terraform.tfvars.example
 
+# GCP Credentials - CRITICAL SECURITY!
+# Service account JSON keys contain private authentication material
+# NEVER COMMIT THESE FILES!
+*.json
+certs/
+3-KUBERNETES/terraform/*.json
+3-KUBERNETES/terraform/terraform.tfvars
+google-credentials.json
+*-key.json
+*serviceaccount*.json
+
 # Terraform
 terraform/.terraform/
 terraform/.terraform.lock.hcl
 terraform/terraform.tfstate*
 terraform/crash.log
 terraform/.tfvars
+3-KUBERNETES/terraform/.terraform/
+3-KUBERNETES/terraform/.terraform.lock.hcl
+3-KUBERNETES/terraform/terraform.tfstate*
+3-KUBERNETES/terraform/crash.log
 tfplan
 
 # Python-generated files

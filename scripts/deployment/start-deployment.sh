@@ -4,6 +4,7 @@
 # Kubernetes Deployment START Script
 # ============================================================================
 # Auto-detects resources and deploys voting app to GKE
+# With secure GCP credentials handling
 # Run: ./start-deployment.sh
 # ============================================================================
 
@@ -28,7 +29,10 @@ echo "║               Kubernetes Deployment - START                           
 echo "╚════════════════════════════════════════════════════════════════════════╝"
 echo ""
 
-# Check prerequisites
+# ═══════════════════════════════════════════════════════════════════════════════
+# STEP 1: Check prerequisites
+# ═══════════════════════════════════════════════════════════════════════════════
+
 echo -e "${BLUE}📋 Checking prerequisites...${NC}"
 if ! command -v gcloud &> /dev/null; then
     echo -e "${RED}❌ ERROR: gcloud CLI not found${NC}"
@@ -38,7 +42,68 @@ if ! command -v kubectl &> /dev/null; then
     echo -e "${RED}❌ ERROR: kubectl not found${NC}"
     exit 1
 fi
+if ! command -v terraform &> /dev/null; then
+    echo -e "${RED}❌ ERROR: terraform not found${NC}"
+    exit 1
+fi
 echo -e "${GREEN}✅ Prerequisites OK${NC}"
+echo ""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STEP 2: Setup GCP credentials
+# ═══════════════════════════════════════════════════════════════════════════════
+
+echo -e "${BLUE}🔐 Setting up GCP credentials...${NC}"
+
+# Look for credentials file in order:
+# 1. GCP_CREDENTIALS environment variable
+# 2. Default location: ~/certs/
+# 3. Fallback: gcloud application-default
+
+CREDS_FILE="${GCP_CREDENTIALS:-}"
+
+# If not set via env, look for it in default location
+if [ -z "$CREDS_FILE" ]; then
+    # Find any .json file in certs directory (usually one)
+    if [ -d "$HOME/certs" ]; then
+        FOUND_CREDS=$(find "$HOME/certs" -maxdepth 1 -name "*diesel*.json" 2>/dev/null | head -1)
+        if [ -n "$FOUND_CREDS" ]; then
+            CREDS_FILE="$FOUND_CREDS"
+        fi
+    fi
+fi
+
+# If we found credentials, use them
+if [ -n "$CREDS_FILE" ] && [ -f "$CREDS_FILE" ]; then
+    echo -e "Using credentials: $CREDS_FILE"
+    export GOOGLE_APPLICATION_CREDENTIALS="$CREDS_FILE"
+    
+    # Authenticate gcloud with the credentials
+    if gcloud auth activate-service-account --key-file="$CREDS_FILE" 2>/dev/null; then
+        echo -e "${GREEN}✅ GCP authenticated${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Could not activate service account${NC}"
+    fi
+else
+    # Try to use application-default credentials
+    echo -e "${YELLOW}ℹ️  No service account JSON found${NC}"
+    echo -e "${BLUE}Checking for application-default credentials...${NC}"
+    
+    if ! gcloud auth application-default print-access-token &>/dev/null; then
+        echo -e "${RED}❌ No valid GCP credentials found!${NC}"
+        echo ""
+        echo -e "Options:"
+        echo -e "  1. Set GCP_CREDENTIALS environment variable:"
+        echo -e "     export GCP_CREDENTIALS=~/certs/key.json"
+        echo ""
+        echo -e "  2. Login with gcloud:"
+        echo -e "     gcloud auth application-default login"
+        echo ""
+        exit 1
+    fi
+    echo -e "${GREEN}✅ Using application-default credentials${NC}"
+fi
+
 echo ""
 
 # Try to detect cluster, create if doesn't exist

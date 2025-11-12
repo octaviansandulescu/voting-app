@@ -6,6 +6,11 @@
 # 2. Cloud SQL MySQL instance
 # 3. VPC and networking
 # 4. Service accounts and IAM
+#
+# AUTHENTICATION:
+# - Set GOOGLE_APPLICATION_CREDENTIALS environment variable to service account JSON
+# - Or use: gcloud auth application-default login
+# - Or export GCP_CREDENTIALS=/path/to/key.json (handled by start-deployment.sh)
 ###############################################################################
 
 terraform {
@@ -15,16 +20,20 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 5.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.1"
+    }
   }
 }
 
+# Provider auto-detects credentials from:
+# 1. GOOGLE_APPLICATION_CREDENTIALS environment variable (set by start-deployment.sh)
+# 2. gcloud Application Default Credentials
+# 3. Service account attached to compute instance
 provider "google" {
   project = var.project_id
   region  = var.region
-  
-  # Use access token from gcloud
-  # Get token: gcloud auth print-access-token
-  access_token = var.gcp_access_token != "" ? var.gcp_access_token : null
 }
 
 # ============================================================================

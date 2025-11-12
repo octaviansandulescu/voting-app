@@ -1,0 +1,559 @@
+
+ gcloud logging read "severity>=WARNING" --project=diesel-skyline-474415-j6 --limit=10
+---
+insertId: dd9d17egu51q
+logName: projects/diesel-skyline-474415-j6/logs/cloudaudit.googleapis.com%2Factivity
+protoPayload:
+  '@type': type.googleapis.com/google.cloud.audit.AuditLog
+  authenticationInfo:
+    oauthInfo:
+      oauthClientId: '114669610692845318075'
+    principalEmail: voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    principalSubject: serviceAccount:voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    serviceAccountKeyName: //iam.googleapis.com/projects/diesel-skyline-474415-j6/serviceAccounts/voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com/keys/5e5f35b560dc94a8cf84baef53bcb3c9d3d15588
+  authorizationInfo:
+  - granted: false
+    permission: iam.serviceAccountKeys.create
+    permissionType: ADMIN_WRITE
+    resource: projects/-/serviceAccounts/109837598771616696804
+    resourceAttributes:
+      name: projects/-/serviceAccounts/109837598771616696804
+      type: iam.googleapis.com/ServiceAccountKey
+  methodName: google.iam.admin.v1.CreateServiceAccountKey
+  request:
+    '@type': type.googleapis.com/google.iam.admin.v1.CreateServiceAccountKeyRequest
+    name: projects/-/serviceAccounts/245684762179-compute@developer.gserviceaccount.com
+    private_key_type: 2
+  requestMetadata:
+    callerIp: 86.120.182.40
+    callerSuppliedUserAgent: google-cloud-sdk gcloud/546.0.0 command/gcloud.iam.service-accounts.keys.create
+      invocation-id/964591fe62e64350b91554002735483d environment/None environment-version/None
+      client-os/LINUX client-os-ver/6.6.87 client-pltf-arch/x86_64 interactive/True
+      from-script/False python/3.13.7 term/xterm-256color  (Linux 6.6.87.2-microsoft-standard-WSL2),gzip(gfe)
+    destinationAttributes: {}
+    requestAttributes:
+      auth: {}
+      time: '2025-11-12T12:52:51.334082136Z'
+  resourceName: projects/-/serviceAccounts/109837598771616696804
+  response:
+    '@type': type.googleapis.com/google.iam.admin.v1.ServiceAccountKey
+  serviceName: iam.googleapis.com
+  status:
+    code: 7
+    details:
+    - '@type': type.googleapis.com/google.rpc.ErrorInfo
+      domain: iam.googleapis.com
+      metadata:
+        permission: iam.serviceAccountKeys.create
+      reason: IAM_PERMISSION_DENIED
+    message: Permission 'iam.serviceAccountKeys.create' denied on resource (or it
+      may not exist).
+receiveTimestamp: '2025-11-12T12:52:51.750466396Z'
+resource:
+  labels:
+    email_id: 245684762179-compute@developer.gserviceaccount.com
+    project_id: diesel-skyline-474415-j6
+    unique_id: '109837598771616696804'
+  type: service_account
+severity: ERROR
+timestamp: '2025-11-12T12:52:51.260353616Z'
+---
+insertId: k0tbxpe2klj2
+labels:
+  compute.googleapis.com/root_trigger_id: 0570111a-d8da-407a-8b9a-1addd4d6a973
+logName: projects/diesel-skyline-474415-j6/logs/cloudaudit.googleapis.com%2Factivity
+protoPayload:
+  '@type': type.googleapis.com/google.cloud.audit.AuditLog
+  authenticationInfo:
+    oauthInfo:
+      oauthClientId: '114669610692845318075'
+    principalEmail: voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    principalSubject: serviceAccount:voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    serviceAccountKeyName: //iam.googleapis.com/projects/diesel-skyline-474415-j6/serviceAccounts/voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com/keys/5e5f35b560dc94a8cf84baef53bcb3c9d3d15588
+  authorizationInfo:
+  - granted: false
+    permission: compute.networks.create
+    permissionType: ADMIN_WRITE
+    resource: projects/diesel-skyline-474415-j6/global/networks/voting-app-cluster-vpc
+    resourceAttributes:
+      name: projects/diesel-skyline-474415-j6/global/networks/voting-app-cluster-vpc
+      service: compute
+      type: compute.networks
+  methodName: v1.compute.networks.insert
+  request:
+    '@type': type.googleapis.com/compute.networks.insert
+    autoCreateSubnetworks: false
+    name: voting-app-cluster-vpc
+    networkFirewallPolicyEnforcementOrder: AFTER_CLASSIC_FIREWALL
+  requestMetadata:
+    callerIp: 86.120.182.40
+    callerSuppliedUserAgent: Terraform/1.13.5 (+https://www.terraform.io) Terraform-Plugin-SDK/2.33.0
+      terraform-provider-google/5.45.2,gzip(gfe)
+    destinationAttributes: {}
+    requestAttributes:
+      auth: {}
+      time: '2025-11-12T11:41:11.753038Z'
+  resourceLocation:
+    currentLocations:
+    - global
+  resourceName: projects/diesel-skyline-474415-j6/global/networks/voting-app-cluster-vpc
+  response:
+    '@type': type.googleapis.com/error
+    error:
+      code: 403
+      errors:
+      - domain: global
+        message: Required 'compute.networks.create' permission for 'projects/diesel-skyline-474415-j6/global/networks/voting-app-cluster-vpc'
+        reason: forbidden
+      message: Required 'compute.networks.create' permission for 'projects/diesel-skyline-474415-j6/global/networks/voting-app-cluster-vpc'
+  serviceName: compute.googleapis.com
+  status:
+    code: 7
+    message: Required 'compute.networks.create' permission for 'projects/diesel-skyline-474415-j6/global/networks/voting-app-cluster-vpc'
+receiveTimestamp: '2025-11-12T11:41:12.487523159Z'
+resource:
+  labels:
+    network_id: '8379025712002028082'
+    project_id: diesel-skyline-474415-j6
+  type: gce_network
+severity: ERROR
+timestamp: '2025-11-12T11:41:11.657796Z'
+---
+insertId: 1ulqy82dxqvo
+logName: projects/diesel-skyline-474415-j6/logs/cloudaudit.googleapis.com%2Factivity
+protoPayload:
+  '@type': type.googleapis.com/google.cloud.audit.AuditLog
+  authenticationInfo:
+    oauthInfo:
+      oauthClientId: '114669610692845318075'
+    principalEmail: voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    principalSubject: serviceAccount:voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    serviceAccountKeyName: //iam.googleapis.com/projects/diesel-skyline-474415-j6/serviceAccounts/voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com/keys/5e5f35b560dc94a8cf84baef53bcb3c9d3d15588
+  authorizationInfo:
+  - granted: false
+    permission: serviceusage.services.enable
+    permissionType: ADMIN_WRITE
+    resource: projectnumbers/245684762179/services/servicenetworking.googleapis.com
+    resourceAttributes: {}
+  - granted: true
+    permission: servicemanagement.services.bind
+    permissionType: DATA_WRITE
+    resource: services/servicenetworking.googleapis.com
+    resourceAttributes: {}
+  methodName: google.api.serviceusage.v1.ServiceUsage.EnableService
+  request:
+    '@type': type.googleapis.com/google.api.serviceusage.v1.EnableServiceRequest
+    name: projects/diesel-skyline-474415-j6/services/servicenetworking.googleapis.com
+  requestMetadata:
+    callerIp: 86.120.182.40
+    callerSuppliedUserAgent: google-cloud-sdk gcloud/546.0.0 command/gcloud.services.enable
+      invocation-id/39ec00b3babf4c42adb16c8a083b0bf5 environment/None environment-version/None
+      client-os/LINUX client-os-ver/6.6.87 client-pltf-arch/x86_64 interactive/False
+      from-script/True python/3.13.7 term/xterm-256color  (Linux 6.6.87.2-microsoft-standard-WSL2),gzip(gfe)
+    destinationAttributes: {}
+    requestAttributes: {}
+  resourceName: projects/diesel-skyline-474415-j6/services/servicenetworking.googleapis.com
+  serviceName: serviceusage.googleapis.com
+  status:
+    code: 7
+    details:
+    - '@type': type.googleapis.com/google.rpc.ErrorInfo
+      domain: serviceusage.googleapis.com
+      reason: AUTH_PERMISSION_DENIED
+    message: |-
+      Permission denied to enable service [servicenetworking.googleapis.com]
+      Help Token: AXcLsyBprPK8HAO7cz6gVgacGJqN0tVI9JCymFkpM8KkTO53uKanDdYPAP1-zrTDkwo4RS3-w79JqwxSsVHCRa5LuI5KoDwuDCZydMe48jaVkj2U
+receiveTimestamp: '2025-11-12T11:41:08.832649561Z'
+resource:
+  labels:
+    method: google.api.serviceusage.v1.ServiceUsage.EnableService
+    project_id: diesel-skyline-474415-j6
+    service: serviceusage.googleapis.com
+  type: audited_resource
+severity: ERROR
+timestamp: '2025-11-12T11:41:07.783855Z'
+---
+insertId: 1bq6mrfe11tmn
+logName: projects/diesel-skyline-474415-j6/logs/cloudaudit.googleapis.com%2Factivity
+protoPayload:
+  '@type': type.googleapis.com/google.cloud.audit.AuditLog
+  authenticationInfo:
+    oauthInfo:
+      oauthClientId: '114669610692845318075'
+    principalEmail: voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    principalSubject: serviceAccount:voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    serviceAccountKeyName: //iam.googleapis.com/projects/diesel-skyline-474415-j6/serviceAccounts/voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com/keys/5e5f35b560dc94a8cf84baef53bcb3c9d3d15588
+  authorizationInfo:
+  - granted: false
+    permission: serviceusage.services.enable
+    permissionType: ADMIN_WRITE
+    resource: projectnumbers/245684762179/services/compute.googleapis.com
+    resourceAttributes: {}
+  - granted: true
+    permission: servicemanagement.services.bind
+    permissionType: DATA_WRITE
+    resource: services/compute.googleapis.com
+    resourceAttributes: {}
+  methodName: google.api.serviceusage.v1.ServiceUsage.EnableService
+  request:
+    '@type': type.googleapis.com/google.api.serviceusage.v1.EnableServiceRequest
+    name: projects/diesel-skyline-474415-j6/services/compute.googleapis.com
+  requestMetadata:
+    callerIp: 86.120.182.40
+    callerSuppliedUserAgent: google-cloud-sdk gcloud/546.0.0 command/gcloud.services.enable
+      invocation-id/23d2aa29df4144be845b3e1c4811627c environment/None environment-version/None
+      client-os/LINUX client-os-ver/6.6.87 client-pltf-arch/x86_64 interactive/False
+      from-script/True python/3.13.7 term/xterm-256color  (Linux 6.6.87.2-microsoft-standard-WSL2),gzip(gfe)
+    destinationAttributes: {}
+    requestAttributes: {}
+  resourceName: projects/diesel-skyline-474415-j6/services/compute.googleapis.com
+  serviceName: serviceusage.googleapis.com
+  status:
+    code: 7
+    details:
+    - '@type': type.googleapis.com/google.rpc.ErrorInfo
+      domain: serviceusage.googleapis.com
+      reason: AUTH_PERMISSION_DENIED
+    message: |-
+      Permission denied to enable service [compute.googleapis.com]
+      Help Token: AXcLsyAMOLK_b85x_37pw5d4UR2vtSu_k7MqiP7JU_nJSe8jxQ1Fi_CFLsX_jcncjA2PuhjqdC6WqjHMhOnYTCjHD9c1rq-EHBkNazAl5njkYovI
+receiveTimestamp: '2025-11-12T11:41:06.191379399Z'
+resource:
+  labels:
+    method: google.api.serviceusage.v1.ServiceUsage.EnableService
+    project_id: diesel-skyline-474415-j6
+    service: serviceusage.googleapis.com
+  type: audited_resource
+severity: ERROR
+timestamp: '2025-11-12T11:41:05.778778Z'
+---
+insertId: 8by656e11cjq
+logName: projects/diesel-skyline-474415-j6/logs/cloudaudit.googleapis.com%2Factivity
+protoPayload:
+  '@type': type.googleapis.com/google.cloud.audit.AuditLog
+  authenticationInfo:
+    oauthInfo:
+      oauthClientId: '114669610692845318075'
+    principalEmail: voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    principalSubject: serviceAccount:voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    serviceAccountKeyName: //iam.googleapis.com/projects/diesel-skyline-474415-j6/serviceAccounts/voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com/keys/5e5f35b560dc94a8cf84baef53bcb3c9d3d15588
+  authorizationInfo:
+  - granted: false
+    permission: serviceusage.services.enable
+    permissionType: ADMIN_WRITE
+    resource: projectnumbers/245684762179/services/sqladmin.googleapis.com
+    resourceAttributes: {}
+  - granted: true
+    permission: servicemanagement.services.bind
+    permissionType: DATA_WRITE
+    resource: services/sqladmin.googleapis.com
+    resourceAttributes: {}
+  methodName: google.api.serviceusage.v1.ServiceUsage.EnableService
+  request:
+    '@type': type.googleapis.com/google.api.serviceusage.v1.EnableServiceRequest
+    name: projects/diesel-skyline-474415-j6/services/sqladmin.googleapis.com
+  requestMetadata:
+    callerIp: 86.120.182.40
+    callerSuppliedUserAgent: google-cloud-sdk gcloud/546.0.0 command/gcloud.services.enable
+      invocation-id/d4d2066274e5440d830934e24e4c5458 environment/None environment-version/None
+      client-os/LINUX client-os-ver/6.6.87 client-pltf-arch/x86_64 interactive/False
+      from-script/True python/3.13.7 term/xterm-256color  (Linux 6.6.87.2-microsoft-standard-WSL2),gzip(gfe)
+    destinationAttributes: {}
+    requestAttributes: {}
+  resourceName: projects/diesel-skyline-474415-j6/services/sqladmin.googleapis.com
+  serviceName: serviceusage.googleapis.com
+  status:
+    code: 7
+    details:
+    - '@type': type.googleapis.com/google.rpc.ErrorInfo
+      domain: serviceusage.googleapis.com
+      reason: AUTH_PERMISSION_DENIED
+    message: |-
+      Permission denied to enable service [sqladmin.googleapis.com]
+      Help Token: AXcLsyAYhSergL36KTQnYeEgctnwEJQR2RnKqvrEPpn4AaYVCmfHY8WVE5JNAAf_FRYWN2x_qpsVGF7Uss8TfMNWy8s6hwSJMB3neBx9hZl8P67d
+receiveTimestamp: '2025-11-12T11:41:04.893312546Z'
+resource:
+  labels:
+    method: google.api.serviceusage.v1.ServiceUsage.EnableService
+    project_id: diesel-skyline-474415-j6
+    service: serviceusage.googleapis.com
+  type: audited_resource
+severity: ERROR
+timestamp: '2025-11-12T11:41:03.756399Z'
+---
+insertId: z9stcye1makc
+logName: projects/diesel-skyline-474415-j6/logs/cloudaudit.googleapis.com%2Factivity
+protoPayload:
+  '@type': type.googleapis.com/google.cloud.audit.AuditLog
+  authenticationInfo:
+    oauthInfo:
+      oauthClientId: '114669610692845318075'
+    principalEmail: voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    principalSubject: serviceAccount:voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    serviceAccountKeyName: //iam.googleapis.com/projects/diesel-skyline-474415-j6/serviceAccounts/voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com/keys/5e5f35b560dc94a8cf84baef53bcb3c9d3d15588
+  authorizationInfo:
+  - granted: false
+    permission: serviceusage.services.enable
+    permissionType: ADMIN_WRITE
+    resource: projectnumbers/245684762179/services/container.googleapis.com
+    resourceAttributes: {}
+  - granted: true
+    permission: servicemanagement.services.bind
+    permissionType: DATA_WRITE
+    resource: services/container.googleapis.com
+    resourceAttributes: {}
+  methodName: google.api.serviceusage.v1.ServiceUsage.EnableService
+  request:
+    '@type': type.googleapis.com/google.api.serviceusage.v1.EnableServiceRequest
+    name: projects/diesel-skyline-474415-j6/services/container.googleapis.com
+  requestMetadata:
+    callerIp: 86.120.182.40
+    callerSuppliedUserAgent: google-cloud-sdk gcloud/546.0.0 command/gcloud.services.enable
+      invocation-id/9c9c357fbb254630994cd513eb0b4ec1 environment/None environment-version/None
+      client-os/LINUX client-os-ver/6.6.87 client-pltf-arch/x86_64 interactive/False
+      from-script/True python/3.13.7 term/xterm-256color  (Linux 6.6.87.2-microsoft-standard-WSL2),gzip(gfe)
+    destinationAttributes: {}
+    requestAttributes: {}
+  resourceName: projects/diesel-skyline-474415-j6/services/container.googleapis.com
+  serviceName: serviceusage.googleapis.com
+  status:
+    code: 7
+    details:
+    - '@type': type.googleapis.com/google.rpc.ErrorInfo
+      domain: serviceusage.googleapis.com
+      reason: AUTH_PERMISSION_DENIED
+    message: |-
+      Permission denied to enable service [container.googleapis.com]
+      Help Token: AXcLsyBsD9FP8vbjbzmaUNq07m_bbzd90DK0RAjo0E4CyClVIATr2nlfu2p9ICiHK3Au6sSgUgs_PrsybPr59nAuaRrFY8FFljjAAeg1s5tImnNT
+receiveTimestamp: '2025-11-12T11:41:02.102493825Z'
+resource:
+  labels:
+    method: google.api.serviceusage.v1.ServiceUsage.EnableService
+    project_id: diesel-skyline-474415-j6
+    service: serviceusage.googleapis.com
+  type: audited_resource
+severity: ERROR
+timestamp: '2025-11-12T11:41:01.623592Z'
+---
+insertId: -kifg6de4l8bc
+labels:
+  compute.googleapis.com/root_trigger_id: 3073e5a0-8d94-4e06-b86d-e141296e624c
+logName: projects/diesel-skyline-474415-j6/logs/cloudaudit.googleapis.com%2Factivity
+protoPayload:
+  '@type': type.googleapis.com/google.cloud.audit.AuditLog
+  authenticationInfo:
+    oauthInfo:
+      oauthClientId: '114669610692845318075'
+    principalEmail: voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    principalSubject: serviceAccount:voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    serviceAccountKeyName: //iam.googleapis.com/projects/diesel-skyline-474415-j6/serviceAccounts/voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com/keys/5e5f35b560dc94a8cf84baef53bcb3c9d3d15588
+  authorizationInfo:
+  - granted: false
+    permission: compute.networks.create
+    permissionType: ADMIN_WRITE
+    resource: projects/diesel-skyline-474415-j6/global/networks/voting-app-cluster-vpc
+    resourceAttributes:
+      name: projects/diesel-skyline-474415-j6/global/networks/voting-app-cluster-vpc
+      service: compute
+      type: compute.networks
+  methodName: v1.compute.networks.insert
+  request:
+    '@type': type.googleapis.com/compute.networks.insert
+    autoCreateSubnetworks: false
+    name: voting-app-cluster-vpc
+    networkFirewallPolicyEnforcementOrder: AFTER_CLASSIC_FIREWALL
+  requestMetadata:
+    callerIp: 86.120.182.40
+    callerSuppliedUserAgent: Terraform/1.13.5 (+https://www.terraform.io) Terraform-Plugin-SDK/2.33.0
+      terraform-provider-google/5.45.2,gzip(gfe)
+    destinationAttributes: {}
+    requestAttributes:
+      auth: {}
+      time: '2025-11-12T11:29:29.550854Z'
+  resourceLocation:
+    currentLocations:
+    - global
+  resourceName: projects/diesel-skyline-474415-j6/global/networks/voting-app-cluster-vpc
+  response:
+    '@type': type.googleapis.com/error
+    error:
+      code: 403
+      errors:
+      - domain: global
+        message: Required 'compute.networks.create' permission for 'projects/diesel-skyline-474415-j6/global/networks/voting-app-cluster-vpc'
+        reason: forbidden
+      message: Required 'compute.networks.create' permission for 'projects/diesel-skyline-474415-j6/global/networks/voting-app-cluster-vpc'
+  serviceName: compute.googleapis.com
+  status:
+    code: 7
+    message: Required 'compute.networks.create' permission for 'projects/diesel-skyline-474415-j6/global/networks/voting-app-cluster-vpc'
+receiveTimestamp: '2025-11-12T11:29:30.445391278Z'
+resource:
+  labels:
+    network_id: '8379025712002028082'
+    project_id: diesel-skyline-474415-j6
+  type: gce_network
+severity: ERROR
+timestamp: '2025-11-12T11:29:29.382221Z'
+---
+insertId: 15xhs4me1lvc9
+logName: projects/diesel-skyline-474415-j6/logs/cloudaudit.googleapis.com%2Factivity
+protoPayload:
+  '@type': type.googleapis.com/google.cloud.audit.AuditLog
+  authenticationInfo:
+    oauthInfo:
+      oauthClientId: '114669610692845318075'
+    principalEmail: voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    principalSubject: serviceAccount:voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    serviceAccountKeyName: //iam.googleapis.com/projects/diesel-skyline-474415-j6/serviceAccounts/voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com/keys/5e5f35b560dc94a8cf84baef53bcb3c9d3d15588
+  authorizationInfo:
+  - granted: false
+    permission: serviceusage.services.enable
+    permissionType: ADMIN_WRITE
+    resource: projectnumbers/245684762179/services/servicenetworking.googleapis.com
+    resourceAttributes: {}
+  - granted: true
+    permission: servicemanagement.services.bind
+    permissionType: DATA_WRITE
+    resource: services/servicenetworking.googleapis.com
+    resourceAttributes: {}
+  methodName: google.api.serviceusage.v1.ServiceUsage.EnableService
+  request:
+    '@type': type.googleapis.com/google.api.serviceusage.v1.EnableServiceRequest
+    name: projects/diesel-skyline-474415-j6/services/servicenetworking.googleapis.com
+  requestMetadata:
+    callerIp: 86.120.182.40
+    callerSuppliedUserAgent: google-cloud-sdk gcloud/546.0.0 command/gcloud.services.enable
+      invocation-id/fb98e13356bb471ba520a7812e77d219 environment/None environment-version/None
+      client-os/LINUX client-os-ver/6.6.87 client-pltf-arch/x86_64 interactive/False
+      from-script/True python/3.13.7 term/xterm-256color  (Linux 6.6.87.2-microsoft-standard-WSL2),gzip(gfe)
+    destinationAttributes: {}
+    requestAttributes: {}
+  resourceName: projects/diesel-skyline-474415-j6/services/servicenetworking.googleapis.com
+  serviceName: serviceusage.googleapis.com
+  status:
+    code: 7
+    details:
+    - '@type': type.googleapis.com/google.rpc.ErrorInfo
+      domain: serviceusage.googleapis.com
+      reason: AUTH_PERMISSION_DENIED
+    message: |-
+      Permission denied to enable service [servicenetworking.googleapis.com]
+      Help Token: AXcLsyCGWei4qTkJYesxzE_zIO0kqw3i3gbQ5z_bn-6vMpIELAaGKOZtOMBUtAEKQLHaTfC6o4JJi7U6YZe4Hln4Y_9gSBOQS3qu8cCbMmMf-20w
+receiveTimestamp: '2025-11-12T11:29:26.264330300Z'
+resource:
+  labels:
+    method: google.api.serviceusage.v1.ServiceUsage.EnableService
+    project_id: diesel-skyline-474415-j6
+    service: serviceusage.googleapis.com
+  type: audited_resource
+severity: ERROR
+timestamp: '2025-11-12T11:29:25.531311Z'
+---
+insertId: 15y8m28dvq26
+logName: projects/diesel-skyline-474415-j6/logs/cloudaudit.googleapis.com%2Factivity
+protoPayload:
+  '@type': type.googleapis.com/google.cloud.audit.AuditLog
+  authenticationInfo:
+    oauthInfo:
+      oauthClientId: '114669610692845318075'
+    principalEmail: voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    principalSubject: serviceAccount:voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    serviceAccountKeyName: //iam.googleapis.com/projects/diesel-skyline-474415-j6/serviceAccounts/voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com/keys/5e5f35b560dc94a8cf84baef53bcb3c9d3d15588
+  authorizationInfo:
+  - granted: false
+    permission: serviceusage.services.enable
+    permissionType: ADMIN_WRITE
+    resource: projectnumbers/245684762179/services/compute.googleapis.com
+    resourceAttributes: {}
+  - granted: true
+    permission: servicemanagement.services.bind
+    permissionType: DATA_WRITE
+    resource: services/compute.googleapis.com
+    resourceAttributes: {}
+  methodName: google.api.serviceusage.v1.ServiceUsage.EnableService
+  request:
+    '@type': type.googleapis.com/google.api.serviceusage.v1.EnableServiceRequest
+    name: projects/diesel-skyline-474415-j6/services/compute.googleapis.com
+  requestMetadata:
+    callerIp: 86.120.182.40
+    callerSuppliedUserAgent: google-cloud-sdk gcloud/546.0.0 command/gcloud.services.enable
+      invocation-id/a3452c7aca1444a996400ab479dee5d2 environment/None environment-version/None
+      client-os/LINUX client-os-ver/6.6.87 client-pltf-arch/x86_64 interactive/False
+      from-script/True python/3.13.7 term/xterm-256color  (Linux 6.6.87.2-microsoft-standard-WSL2),gzip(gfe)
+    destinationAttributes: {}
+    requestAttributes: {}
+  resourceName: projects/diesel-skyline-474415-j6/services/compute.googleapis.com
+  serviceName: serviceusage.googleapis.com
+  status:
+    code: 7
+    details:
+    - '@type': type.googleapis.com/google.rpc.ErrorInfo
+      domain: serviceusage.googleapis.com
+      reason: AUTH_PERMISSION_DENIED
+    message: |-
+      Permission denied to enable service [compute.googleapis.com]
+      Help Token: AXcLsyAPxnqOA84Ef7M6O4IXBGq6ycxjpA7LTdp10dhj924L_tof551uPb0EzfEJPtGPshzu4D6ChymmLzYzBr_t0n4ioOtLTbC06cfbDIXUtbus
+receiveTimestamp: '2025-11-12T11:29:24.445192582Z'
+resource:
+  labels:
+    method: google.api.serviceusage.v1.ServiceUsage.EnableService
+    project_id: diesel-skyline-474415-j6
+    service: serviceusage.googleapis.com
+  type: audited_resource
+severity: ERROR
+timestamp: '2025-11-12T11:29:23.351766Z'
+---
+insertId: 15x1dve1xubs
+logName: projects/diesel-skyline-474415-j6/logs/cloudaudit.googleapis.com%2Factivity
+protoPayload:
+  '@type': type.googleapis.com/google.cloud.audit.AuditLog
+  authenticationInfo:
+    oauthInfo:
+      oauthClientId: '114669610692845318075'
+    principalEmail: voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    principalSubject: serviceAccount:voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com
+    serviceAccountKeyName: //iam.googleapis.com/projects/diesel-skyline-474415-j6/serviceAccounts/voting-app@diesel-skyline-474415-j6.iam.gserviceaccount.com/keys/5e5f35b560dc94a8cf84baef53bcb3c9d3d15588
+  authorizationInfo:
+  - granted: false
+    permission: serviceusage.services.enable
+    permissionType: ADMIN_WRITE
+    resource: projectnumbers/245684762179/services/sqladmin.googleapis.com
+    resourceAttributes: {}
+  - granted: true
+    permission: servicemanagement.services.bind
+    permissionType: DATA_WRITE
+    resource: services/sqladmin.googleapis.com
+    resourceAttributes: {}
+  methodName: google.api.serviceusage.v1.ServiceUsage.EnableService
+  request:
+    '@type': type.googleapis.com/google.api.serviceusage.v1.EnableServiceRequest
+    name: projects/diesel-skyline-474415-j6/services/sqladmin.googleapis.com
+  requestMetadata:
+    callerIp: 86.120.182.40
+    callerSuppliedUserAgent: google-cloud-sdk gcloud/546.0.0 command/gcloud.services.enable
+      invocation-id/8fa2b7c832ee43ffbf8cc3b596f0523d environment/None environment-version/None
+      client-os/LINUX client-os-ver/6.6.87 client-pltf-arch/x86_64 interactive/False
+      from-script/True python/3.13.7 term/xterm-256color  (Linux 6.6.87.2-microsoft-standard-WSL2),gzip(gfe)
+    destinationAttributes: {}
+    requestAttributes: {}
+  resourceName: projects/diesel-skyline-474415-j6/services/sqladmin.googleapis.com
+  serviceName: serviceusage.googleapis.com
+  status:
+    code: 7
+    details:
+    - '@type': type.googleapis.com/google.rpc.ErrorInfo
+      domain: serviceusage.googleapis.com
+      reason: AUTH_PERMISSION_DENIED
+    message: |-
+      Permission denied to enable service [sqladmin.googleapis.com]
+      Help Token: AXcLsyAXtW-7VdbyWxYhkJ_b0axydXcuiZ2hPaDmRTEBX42dKcDPxfttPKfeSBWGAfetWHKBliBlON0ApqmCqtr2QJHa5WRtsDSB2JdeP9Il2lL3
+receiveTimestamp: '2025-11-12T11:29:22.314767955Z'
+resource:
+  labels:
+    method: google.api.serviceusage.v1.ServiceUsage.EnableService
+    project_id: diesel-skyline-474415-j6
+    service: serviceusage.googleapis.com
+  type: audited_resource
+severity: ERROR
+timestamp: '2025-11-12T11:29:21.284444Z'

@@ -91,10 +91,6 @@ resource "google_sql_database_instance" "voting_db" {
   region           = var.region
   deletion_protection = false
 
-  depends_on = [
-    google_service_networking_connection.private_vpc_connection
-  ]
-
   settings {
     tier      = "db-f1-micro"
     disk_size = 20
@@ -104,9 +100,9 @@ resource "google_sql_database_instance" "voting_db" {
     }
 
     ip_configuration {
-      # Use private IP only - more secure for GKE
-      ipv4_enabled = false
-      private_network = google_compute_network.voting_vpc.id
+      # Use public IP for simplicity (can access from GKE via network)
+      ipv4_enabled    = true
+      require_ssl     = false
     }
   }
 }

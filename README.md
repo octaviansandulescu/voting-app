@@ -15,6 +15,27 @@ Each mode is **completely independent** - choose based on your learning goals!
 
 ---
 
+## 🚀 Quick Start for Beginners
+
+**New to DevOps?** Start here:
+
+| Guide | Time | Level | What You'll Do |
+|-------|------|-------|----------------|
+| **[📖 QUICKSTART](QUICKSTART.md)** | 5 min | Beginner | Get app running locally with Docker Compose |
+| **[🎓 TUTORIAL](docs/TUTORIAL.md)** | 30 min | Beginner | Step-by-step deploy to Kubernetes on GCP |
+| **[❓ FAQ](FAQ.md)** | - | All | Common questions answered |
+| **[🐛 TROUBLESHOOTING](TROUBLESHOOTING.md)** | - | All | Fix common errors |
+
+**Want to dive in immediately?** Run these 3 commands:
+```bash
+git clone https://github.com/octaviansandulescu/voting-app.git
+cd voting-app
+docker-compose up -d
+# Open: http://localhost
+```
+
+---
+
 ## 🎯 What You'll Learn
 
 This course teaches **hands-on DevOPS** through practical, real-world examples:
